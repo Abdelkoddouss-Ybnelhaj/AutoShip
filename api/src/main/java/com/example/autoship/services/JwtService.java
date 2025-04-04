@@ -5,13 +5,9 @@ import java.util.Map;
 
 public interface JwtService {
 
-    String extractUserName(String token);
+    String extractSubject(String token);
 
-    String generateToken(UserDetails userDetails);
+    String generateToken(Map<String, Object> extraClaims,Long githubID);
 
-    String generateToken(Map<String, Object> extraClaims);
-
-    String generateToken(Map<String, Object> extraClaims,UserDetails userDetails);
-
-    boolean isTokenValid(String token, UserDetails userDetails);
+    boolean isTokenValid(String token, String githubID);
 }

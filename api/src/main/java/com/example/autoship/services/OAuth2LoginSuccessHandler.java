@@ -83,11 +83,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 user = Optional.of(userRepository.save(newUser));
             }
 
-            // Create JWT token with the access token
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("access-token",accessToken);
-            claims.put("githubID",githubID);
-            String jwtToken = jwtService.generateToken(claims,user.get());
+            String jwtToken = generateToken(accessToken,githubID,user.get());
 
             log.info("JWT successfully generated for user: {}", username);
 
@@ -101,5 +97,16 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             response.sendRedirect(clientUrl+"/login?success=false");
         }
 
+    }
+
+
+    private String generateToken(String accessToken,Long githubID, User user){
+        // Create JWT token with the access token
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("access-token",accessToken);
+        claims.put("role",user.getRole());
+        claims.put("username",user.getUsername());
+
+        return jwtService.generateToken(claims,githubID);
     }
 }

@@ -5,7 +5,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.security.Key;
@@ -19,7 +18,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtServiceImpl implements JwtService {
 
     @Override
-    public String extractUserName(String token) {
+    public String extractSubject(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -43,17 +42,14 @@ public class JwtServiceImpl implements JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    @Override
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
-    }
 
     @Override
-    public String generateToken(Map<String, Object> extraClaims) {
+    public String generateToken(Map<String, Object> extraClaims,Long githubID) {
         long validityInMilliseconds = 360000 * 24;
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
+                .setSubject(String.valueOf(githubID))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + validityInMilliseconds))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -61,24 +57,9 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-
-        long validityInMilliseconds = 360000 * 24;
-        extraClaims.put("role", userDetails.getAuthorities());
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + validityInMilliseconds))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    @Override
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername())) &&
+    public boolean isTokenValid(String token, String githubID) {
+        final String subject = extractSubject(token);
+        return (subject.equals(githubID)) &&
                 !isTokenExpired(token);
     }
 
