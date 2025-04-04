@@ -4,12 +4,12 @@ spring:
       client:
         registration:
           github:
-            client-id: Ov23liy74DG4Xk7DcqcK
-            client-secret: cadb755325e91442fb78f9234ad7511718235c78
+            client-id: 
+            client-secret:
             scope: read:user, user:email
             token-url: https://github.com/login/oauth/access_token
             redirect-url: http://localhost:8080/login/oauth2/code/github
-      client-url: http://localhost:4000
+      client-url: ${SPRING_CLIENT_URL:http://localhost:4000}
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/autoShipDB}
