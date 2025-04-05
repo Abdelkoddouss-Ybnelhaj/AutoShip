@@ -5,6 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.security.Key;
@@ -21,6 +22,13 @@ public class JwtServiceImpl implements JwtService {
     public String extractSubject(String token) {
         return extractClaim(token, Claims::getSubject);
     }
+
+    @Override
+    public String extractKey(String token,String key) {
+        Claims claims = extractAllClaims(token);
+        return claims.get(key, String.class);
+    }
+
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
         final Claims claims = extractAllClaims(token);

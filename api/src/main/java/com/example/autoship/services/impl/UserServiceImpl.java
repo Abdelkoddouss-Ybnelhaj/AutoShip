@@ -20,7 +20,7 @@ public class UserServiceImpl implements UserService {
         return new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String subject) {
-                return (UserDetails) userRepository.findById(Long.getLong(subject))
+                return (UserDetails) userRepository.findById(Long.parseLong(subject))
                         .orElseThrow(() -> new UsernameNotFoundException("ID " + subject + " not found !"));
             }
         };

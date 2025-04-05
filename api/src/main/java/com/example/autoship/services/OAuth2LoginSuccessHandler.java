@@ -47,7 +47,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String username = oauthUser.getAttribute("name");
         Long githubID = ((Number) Objects.requireNonNull(oauthUser.getAttribute("id"))).longValue();
 
-
         if (username == null) {
             log.error("OAuth2 authentication failed: Missing required attributes (githubID={})", githubID);
             response.sendRedirect(clientUrl+"/login?success=false");
@@ -74,7 +73,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
             String email = oauthUser.getAttribute("email");
             String avatar_url = oauthUser.getAttribute("avatar_url");
-
+            String login = oauthUser.getAttribute("login");
             // create user if new
             Optional<User> user = userRepository.findById(githubID);
             if(user.isEmpty()){
@@ -83,7 +82,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 user = Optional.of(userRepository.save(newUser));
             }
 
-            String jwtToken = generateToken(accessToken,githubID,user.get());
+            String jwtToken = generateToken(accessToken,githubID,login,user.get());
 
             log.info("JWT successfully generated for user: {}", username);
 
@@ -100,10 +99,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     }
 
 
-    private String generateToken(String accessToken,Long githubID, User user){
+    private String generateToken(String accessToken,Long githubID, String login, User user){
         // Create JWT token with the access token
         Map<String, Object> claims = new HashMap<>();
         claims.put("access-token",accessToken);
+        claims.put("login",login);
         claims.put("role",user.getRole());
         claims.put("username",user.getUsername());
 

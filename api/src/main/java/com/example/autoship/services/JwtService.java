@@ -7,6 +7,8 @@ public interface JwtService {
 
     String extractSubject(String token);
 
+    String extractKey(String token,String key);
+
     String generateToken(Map<String, Object> extraClaims,Long githubID);
 
     boolean isTokenValid(String token, String githubID);
