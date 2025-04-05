@@ -31,7 +31,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     public OAuth2LoginSuccessHandler(OAuth2AuthorizedClientService authorizedClientService,
-                                    @Value("${spring.security.oauth2.client-url:http://localhost:3000}") String clientUrl,
+                                     @Value("${spring.security.oauth2.client-url}") String clientUrl,
                                      UserRepository userRepository,
                                      JwtService jwtService) {
         this.authorizedClientService = authorizedClientService;
@@ -91,7 +91,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
             // Redirect user to client app
             response.sendRedirect(clientUrl+"/login?success=true&token="+jwtToken);
-            log.info("Redirecting user {} to client app with authentication token.", email);
+            log.info("Redirecting user {} to client app with authentication token.", username);
         } catch (Exception ex){
             response.sendRedirect(clientUrl+"/login?success=false");
         }
