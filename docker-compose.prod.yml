@@ -14,15 +14,14 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   api:
-    build:
-      context: api/
+    image: abdo001/autoship:backv1.1
     ports:
       - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/autoShipDB
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin
-      - GITHUB-CLIENT-ID==
+      - GITHUB-CLIENT-ID=
       - GITHUB-CLIENT-SECRET=
       - CLIENT-URL=http://localhost:5321
     container_name: api-backend
