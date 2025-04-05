@@ -43,7 +43,7 @@ public class JwtServiceTest {
     }
 
     @Test
-    public void testExtractUserName_Success() {
+    public void testExtractSubject_Success() {
 
         // Generate token
         String jwt = jwtService.generateToken(claims,14785L);
@@ -53,6 +53,19 @@ public class JwtServiceTest {
 
         // Assert
         assertEquals("14785", subject);
+    }
+
+    @Test
+    public void testExtractAccessToken_Success() {
+
+        // Generate token
+        String jwt = jwtService.generateToken(claims,14785L);
+
+        // extract username
+        String id = jwtService.extractKey(jwt,"access-token");
+
+        // Assert
+        assertEquals("access-token", id);
     }
 
     @Test
