@@ -1,6 +1,6 @@
 "use client";
-import { useAuth } from "../hooks/useAuth";
 import { Navbar } from "@/components/features/landing/navbar";
+import { useAuth } from "../hooks/useAuth";
 import { HeroSection } from "@/components/features/landing/hero-section";
 import { LogosSection } from "@/components/features/landing/logos-section";
 import { FeaturesSection } from "@/components/features/landing/features-section";
@@ -11,7 +11,7 @@ import { FAQSection } from "@/components/features/landing/faq-section";
 import { CTASection } from "@/components/features/landing/cta-section";
 import { Footer } from "@/components/features/landing/footer";
 
-export default function LandingPage() {
+function LandingPage() {
   const { login, isLoading } = useAuth();
 
   return (
@@ -29,3 +29,4 @@ export default function LandingPage() {
     </div>
   );
 }
+export default LandingPage;
