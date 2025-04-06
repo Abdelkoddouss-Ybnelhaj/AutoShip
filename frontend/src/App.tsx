@@ -1,12 +1,31 @@
 import "./App.css";
-import LandingPage from "./pages"; // Adjust if your landing page path differs
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // Import necessary routing components
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import LandingPage from "./pages";
+import OnboardingPage from "./pages/onboarding";
+
+import AuthRedirectHandler from "./utils/AuthRedirectHandler";
+import ProtectedRoute from "./utils/ProtectedRoute";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<AuthRedirectHandler />} />
+
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/onboarding" element={<OnboardingPage />} />
+        </Route>
+
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
