@@ -7,10 +7,21 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
+
+# Local environment
 *.local
+.env
+.env.*          # ignore all env files like .env.development, .env.local etc
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml  # to ignore docker-compose.dev.yml or others
 
 # Editor directories and files
 .vscode/*

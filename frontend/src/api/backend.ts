@@ -29,19 +29,49 @@ export async function generateSSHKey(): Promise<string> {
   });
 }
 
+// src/api/github.ts
+
+// import axios from "axios";
+// import { getToken } from "@/utils/auth";
+
+// export const fetchUserRepos = async () => {
+//   const token =
+//     "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsImFjY2Vzcy10b2tlbiI6Imdob19qYWN3V1pMd0Njbng2VWtLVTR4aUhLVEkzTzRmRXEzb3hBbEciLCJsb2dpbiI6IkFiZGVsa29kZG91c3MtWWJuZWxoYWoiLCJ1c2VybmFtZSI6IkFiZGVsa29kZG91c3MgWWJuZWxoYWoiLCJzdWIiOiIxNzA3Mzk2MjYiLCJpYXQiOjE3NDM5NTQ3MTYsImV4cCI6MTc0Mzk2MzM1Nn0.Suq_Pn7RJKTCcEpZS8t_gzNiPlo0lBkAdBdrrKHL_EQ";
+//   const headers = {
+//     Authorization: `Bearer ${token}`,
+//   };
+
+//   if (!token) throw new Error("No token found");
+
+//   const response = await axios.get("http://localhost:8080/api/v1/repos", {
+//     headers
+//   });
+//   console.log("Response:", response);
+
+//   return response.data.data; // returns the repo array
+// };
+
+
+
+import { getToken } from "@/utils/auth";
 import axios from "axios";
 
-const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,
-});
+export const fetchUserRepos = async () => {
+  const token = getToken();
 
-instance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (!token) throw new Error("No token found");
+
+  try {
+    const response = await axios.get("http://localhost:8080/api/v1/repos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("Repos fetched:", response.data);
+    return response.data;
+  } catch (err) {
+    console.error("Failed to fetch repos:", err);
+    throw err;
   }
-  return config;
-});
-
-export default instance;
+};

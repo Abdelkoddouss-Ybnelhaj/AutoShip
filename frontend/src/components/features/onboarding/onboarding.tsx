@@ -16,7 +16,7 @@ import {
   submissionSuccess,
   submissionFailed,
 } from "@/store/slice/onboardingSlice";
-import { sendOnboardingData } from "@/api/backend";
+import { fetchUserRepos, sendOnboardingData } from "@/api/backend";
 import {
   Card,
   CardContent,
@@ -62,7 +62,12 @@ function Onboarding() {
 
   const [progress, setProgress] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [repos, setRepos] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+
+  
   const totalSteps = 5; // Including review step
 
   useEffect(() => {

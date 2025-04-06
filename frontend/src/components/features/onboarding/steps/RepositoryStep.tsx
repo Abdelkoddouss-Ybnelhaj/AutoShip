@@ -23,27 +23,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { fetchUserRepos } from "@/api/backend";
 
 export default function RepositoryStep() {
   const dispatch = useAppDispatch();
   const formData = useAppSelector(selectOnboardingData);
   const errors = useAppSelector(selectErrors);
 
+  const [repos, setRepos] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchUserRepos()
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setRepos(res.data); // repo names directly
+        } else {
+          console.warn("Unexpected repo data format:", res.data);
+        }
+      })
+      .catch((err) => {
+        console.error("Repo fetch failed", err);
+        // Optionally trigger login or retry
+      });
+  }, []);
+
   const handleChange = (field: keyof typeof formData, value: string) => {
     dispatch(setField({ field, value }));
   };
 
-  // Sample repositories for the dropdown
-  const repositories = [
-    { value: "https://github.com/user/project-a", label: "project-a" },
-    { value: "https://github.com/user/project-b", label: "project-b" },
-    { value: "https://github.com/user/project-c", label: "project-c" },
-    { value: "https://github.com/user/project-d", label: "project-d" },
-    { value: "https://github.com/user/project-e", label: "project-e" },
-  ];
-
   return (
     <div className="space-y-4">
+      {/* Repository Dropdown */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="repository" className="text-sm font-medium">
@@ -69,19 +80,25 @@ export default function RepositoryStep() {
             className={`${errors.repository ? "border-destructive" : ""}`}
           >
             <div className="flex items-center gap-2">
-              <Github className="h-4 w-4 text-muted-foreground" />
               <SelectValue placeholder="Select a repository" />
             </div>
           </SelectTrigger>
+
           <SelectContent>
-            {repositories.map((repo) => (
-              <SelectItem key={repo.value} value={repo.value}>
-                <div className="flex items-center gap-2">
-                  <Github className="h-4 w-4" />
-                  {repo.label}
-                </div>
-              </SelectItem>
-            ))}
+            {repos.length > 0 ? (
+              repos.map((name) => (
+                <SelectItem key={name} value={name}>
+                  <div className="flex items-center gap-2">
+                    <Github className="h-4 w-4" />
+                    {name}
+                  </div>
+                </SelectItem>
+              ))
+            ) : (
+              <div className="p-2 text-sm text-muted-foreground">
+                No repositories found.
+              </div>
+            )}
           </SelectContent>
         </Select>
 
@@ -95,6 +112,7 @@ export default function RepositoryStep() {
         </p>
       </div>
 
+      {/* Branch Input */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="branch" className="text-sm font-medium">
@@ -132,6 +150,7 @@ export default function RepositoryStep() {
         </p>
       </div>
 
+      {/* Info Alert */}
       <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 text-blue-800 dark:text-blue-300">
         <Info className="h-4 w-4" />
         <AlertDescription>
