@@ -1,38 +1,15 @@
-"use client";
+"use client"
 
-import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import {
-  selectOnboardingData,
-  selectErrors,
-  setField,
-} from "@/store/slice/onboardingSlice";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  AlertCircle,
-  CheckCircle,
-  FileCode2,
-  HelpCircle,
-  Layers,
-  Terminal,
-} from "lucide-react";
+import { useOnboarding } from "@/hooks/useOnboarding"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { AlertCircle, CheckCircle, FileCode2, HelpCircle, Layers, Terminal } from "lucide-react"
 
 export default function DeploymentStep() {
-  const dispatch = useAppDispatch();
-  const formData = useAppSelector(selectOnboardingData);
-  const errors = useAppSelector(selectErrors);
-
-  const handleChange = (field: keyof typeof formData, value: any) => {
-    dispatch(setField({ field, value }));
-  };
+  const { onboardingData, errors, updateOnboardingData } = useOnboarding()
 
   return (
     <div className="space-y-4">
@@ -42,32 +19,20 @@ export default function DeploymentStep() {
         <div className="grid grid-cols-2 gap-3 pt-1">
           <Card
             className={`cursor-pointer border-2 transition-all ${
-              formData.useDockerCompose
-                ? "border-primary bg-primary/5"
-                : "hover:border-primary/50"
+              onboardingData.useDockerCompose ? "border-primary bg-primary/5" : "hover:border-primary/50"
             }`}
-            onClick={() => handleChange("useDockerCompose", true)}
+            onClick={() => updateOnboardingData("useDockerCompose", true)}
           >
             <CardContent className="p-3">
               <div className="flex items-start gap-2">
-                <div
-                  className={`p-1.5 rounded-full ${
-                    formData.useDockerCompose ? "bg-primary/10" : "bg-muted"
-                  }`}
-                >
+                <div className={`p-1.5 rounded-full ${onboardingData.useDockerCompose ? "bg-primary/10" : "bg-muted"}`}>
                   <Layers
-                    className={`h-4 w-4 ${
-                      formData.useDockerCompose
-                        ? "text-primary"
-                        : "text-muted-foreground"
-                    }`}
+                    className={`h-4 w-4 ${onboardingData.useDockerCompose ? "text-primary" : "text-muted-foreground"}`}
                   />
                 </div>
                 <div>
                   <h4 className="font-medium text-sm">Docker Compose</h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Multiple containers
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Multiple containers</p>
                 </div>
               </div>
             </CardContent>
@@ -75,32 +40,22 @@ export default function DeploymentStep() {
 
           <Card
             className={`cursor-pointer border-2 transition-all ${
-              !formData.useDockerCompose
-                ? "border-primary bg-primary/5"
-                : "hover:border-primary/50"
+              !onboardingData.useDockerCompose ? "border-primary bg-primary/5" : "hover:border-primary/50"
             }`}
-            onClick={() => handleChange("useDockerCompose", false)}
+            onClick={() => updateOnboardingData("useDockerCompose", false)}
           >
             <CardContent className="p-3">
               <div className="flex items-start gap-2">
                 <div
-                  className={`p-1.5 rounded-full ${
-                    !formData.useDockerCompose ? "bg-primary/10" : "bg-muted"
-                  }`}
+                  className={`p-1.5 rounded-full ${!onboardingData.useDockerCompose ? "bg-primary/10" : "bg-muted"}`}
                 >
                   <FileCode2
-                    className={`h-4 w-4 ${
-                      !formData.useDockerCompose
-                        ? "text-primary"
-                        : "text-muted-foreground"
-                    }`}
+                    className={`h-4 w-4 ${!onboardingData.useDockerCompose ? "text-primary" : "text-muted-foreground"}`}
                   />
                 </div>
                 <div>
                   <h4 className="font-medium text-sm">Dockerfile</h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Single container
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Single container</p>
                 </div>
               </div>
             </CardContent>
@@ -128,16 +83,10 @@ export default function DeploymentStep() {
           <Terminal className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="runningCommand"
-            value={formData.runningCommand}
-            onChange={(e) => handleChange("runningCommand", e.target.value)}
-            placeholder={
-              formData.useDockerCompose
-                ? "docker-compose up -d"
-                : "docker run -d -p 3000:3000 my-app"
-            }
-            className={`pl-10 ${
-              errors.runningCommand ? "border-destructive" : ""
-            }`}
+            value={onboardingData.runningCommand}
+            onChange={(e) => updateOnboardingData("runningCommand", e.target.value)}
+            placeholder={onboardingData.useDockerCompose ? "docker-compose up -d" : "docker run -d -p 3000:3000 my-app"}
+            className={`pl-10 ${errors.runningCommand ? "border-destructive" : ""}`}
           />
         </div>
         {errors.runningCommand && (
@@ -148,19 +97,13 @@ export default function DeploymentStep() {
         <div className="text-xs text-muted-foreground mt-1">
           <p>The command that will be executed to start your application.</p>
           <p className="mt-1">
-            {formData.useDockerCompose ? (
+            {onboardingData.useDockerCompose ? (
               <span>
-                Example:{" "}
-                <code className="bg-muted px-1 rounded">
-                  docker-compose up -d
-                </code>
+                Example: <code className="bg-muted px-1 rounded">docker-compose up -d</code>
               </span>
             ) : (
               <span>
-                Example:{" "}
-                <code className="bg-muted px-1 rounded">
-                  docker run -d -p 3000:3000 my-image
-                </code>
+                Example: <code className="bg-muted px-1 rounded">docker run -d -p 3000:3000 my-image</code>
               </span>
             )}
           </p>
@@ -170,10 +113,10 @@ export default function DeploymentStep() {
       <Alert className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900 text-green-800 dark:text-green-300">
         <CheckCircle className="h-4 w-4" />
         <AlertDescription>
-          Your deployment configuration is almost ready! Review your settings in
-          the next step.
+          Your deployment configuration is almost ready! Review your settings in the next step.
         </AlertDescription>
       </Alert>
     </div>
-  );
+  )
 }
+

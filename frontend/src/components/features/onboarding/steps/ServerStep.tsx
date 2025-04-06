@@ -1,47 +1,27 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import {
-  selectOnboardingData,
-  selectErrors,
-  setField,
-} from "@/store/slice/onboardingSlice";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { AlertCircle, HardDrive, HelpCircle, Info, Key } from "lucide-react";
-import { generateSSHKey } from "@/api/backend";
+import { useState } from "react"
+import { useOnboarding } from "@/hooks/useOnboarding"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { AlertCircle, HardDrive, HelpCircle, Info, Key, User } from "lucide-react"
 
 export default function ServerStep() {
-  const dispatch = useAppDispatch();
-  const formData = useAppSelector(selectOnboardingData);
-  const errors = useAppSelector(selectErrors);
-  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
-
-  const handleChange = (field: keyof typeof formData, value: any) => {
-    dispatch(setField({ field, value }));
-  };
+  const { onboardingData, errors, updateOnboardingData, generateSSHKey } = useOnboarding()
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false)
 
   const handleGenerateSSHKey = async () => {
-    setIsGeneratingKey(true);
+    setIsGeneratingKey(true)
     try {
-      const key = await generateSSHKey();
-      dispatch(setField({ field: "sshKey", value: key }));
-    } catch (error) {
-      console.error("Failed to generate SSH key:", error);
+      await generateSSHKey()
     } finally {
-      setIsGeneratingKey(false);
+      setIsGeneratingKey(false)
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
@@ -65,8 +45,8 @@ export default function ServerStep() {
           <HardDrive className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="serverIP"
-            value={formData.serverIP}
-            onChange={(e) => handleChange("serverIP", e.target.value)}
+            value={onboardingData.serverIP}
+            onChange={(e) => updateOnboardingData("serverIP", e.target.value)}
             placeholder="192.168.1.1"
             className={`pl-10 ${errors.serverIP ? "border-destructive" : ""}`}
           />
@@ -81,16 +61,50 @@ export default function ServerStep() {
         </p>
       </div>
 
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="serverUsername" className="text-sm font-medium">
+            Server Username <span className="text-destructive">*</span>
+          </Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p>Username for server login (e.g., root, ubuntu, ec2-user)</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="serverUsername"
+            value={onboardingData.serverUsername}
+            onChange={(e) => updateOnboardingData("serverUsername", e.target.value)}
+            placeholder="ubuntu"
+            className={`pl-10 ${errors.serverUsername ? "border-destructive" : ""}`}
+          />
+        </div>
+        {errors.serverUsername && (
+          <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+            <AlertCircle className="h-3 w-3" /> {errors.serverUsername}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">The username used to access your deployment server.</p>
+      </div>
+
       <div className="space-y-3 bg-muted/30 p-3 rounded-lg border">
         <h4 className="font-medium text-sm flex items-center gap-2">
           <Key className="h-4 w-4 text-primary" />
-          SSH Authentication <span className="text-destructive">*</span>
+          SSH Keys <span className="text-muted-foreground">(optional)</span>
         </h4>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="sshKey" className="text-sm font-medium">
-              SSH Key
+            <Label htmlFor="sshPublicKey" className="text-sm font-medium">
+              SSH Public Key
             </Label>
             <Button
               variant="outline"
@@ -104,49 +118,54 @@ export default function ServerStep() {
             </Button>
           </div>
           <Textarea
-            id="sshKey"
-            value={formData.sshKey}
-            onChange={(e) => handleChange("sshKey", e.target.value)}
+            id="sshPublicKey"
+            value={onboardingData.sshPublicKey || ""}
+            onChange={(e) => updateOnboardingData("sshPublicKey", e.target.value)}
             placeholder="Paste your SSH public key here"
-            className={`font-mono text-xs h-20 ${
-              errors.sshKey ? "border-destructive" : ""
-            }`}
-            required
+            className={`font-mono text-xs h-20 ${errors.sshPublicKey ? "border-destructive" : ""}`}
           />
-          {errors.sshKey && (
+          {errors.sshPublicKey && (
             <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-              <AlertCircle className="h-3 w-3" /> {errors.sshKey}
+              <AlertCircle className="h-3 w-3" /> {errors.sshPublicKey}
             </p>
           )}
-          <div className="text-xs text-muted-foreground mt-1">
-            <p>
-              <strong>Required:</strong> This SSH key will be used to securely
-              connect to your server during deployments.
-            </p>
+          <p className="text-xs text-muted-foreground">
+            Your SSH public key that will be added to the server's authorized_keys file.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="sshPrivateKey" className="text-sm font-medium">
+              SSH Private Key <span className="text-muted-foreground">(optional)</span>
+            </Label>
           </div>
+          <Textarea
+            id="sshPrivateKey"
+            value={onboardingData.sshPrivateKey || ""}
+            onChange={(e) => updateOnboardingData("sshPrivateKey", e.target.value)}
+            placeholder="-----BEGIN RSA PRIVATE KEY-----..."
+            className={`font-mono text-xs h-32 ${errors.sshPrivateKey ? "border-destructive" : ""}`}
+          />
+          {errors.sshPrivateKey && (
+            <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+              <AlertCircle className="h-3 w-3" /> {errors.sshPrivateKey}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Your SSH private key. This is optional and will be stored securely. If not provided, you'll need to use your
+            local SSH key.
+          </p>
         </div>
       </div>
 
       <Alert className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 py-2">
         <Info className="h-3 w-3" />
-        <AlertDescription className="text-xs">
-          <strong>Where to find your SSH key:</strong>
-          <ul className="list-disc pl-4 mt-1 space-y-0.5">
-            <li>
-              Linux/Mac:{" "}
-              <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded text-[10px]">
-                ~/.ssh/id_rsa.pub
-              </code>
-            </li>
-            <li>
-              Windows:{" "}
-              <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded text-[10px]">
-                C:\Users\YourUsername\.ssh\id_rsa.pub
-              </code>
-            </li>
-          </ul>
+        <AlertDescription>
+          Make sure your server is accessible and has the necessary permissions for deployment.
         </AlertDescription>
       </Alert>
     </div>
-  );
+  )
 }
+

@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { RootState } from "@/store";
+import type { RootState } from "../index";
 
-// Update the OnboardingState interface to remove the optional fields and make useSSH always true
+// Update the OnboardingState interface to include the new fields
 export interface OnboardingState {
   currentStep: number;
   data: {
@@ -9,7 +9,11 @@ export interface OnboardingState {
     branch: string;
     event: string;
     serverIP: string;
-    sshKey: string;
+    sshPrivateKey: string;
+    sshPublicKey: string;
+    dockerUsername: string;
+    dockerPassword: string;
+    serverUsername: string;
     useDockerCompose: boolean;
     runningCommand: string;
   };
@@ -18,7 +22,7 @@ export interface OnboardingState {
   isSubmitted: boolean;
 }
 
-// Update the initialState to remove the optional fields and set useSSH to true by default
+// Update the initialState to include the new fields
 const initialState: OnboardingState = {
   currentStep: 1,
   data: {
@@ -26,7 +30,11 @@ const initialState: OnboardingState = {
     branch: "",
     event: "push",
     serverIP: "",
-    sshKey: "",
+    sshPrivateKey: "",
+    sshPublicKey: "",
+    dockerUsername: "",
+    dockerPassword: "",
+    serverUsername: "",
     useDockerCompose: false,
     runningCommand: "",
   },
@@ -39,13 +47,7 @@ export const onboardingSlice = createSlice({
   name: "onboarding",
   initialState,
   reducers: {
-    setField: (
-      state,
-      action: PayloadAction<{
-        field: keyof OnboardingState["data"];
-        value: any;
-      }>
-    ) => {
+    setField: (state, action: PayloadAction<{ field: keyof OnboardingState["data"]; value: any }>) => {
       const { field, value } = action.payload;
       state.data[field] = value;
 
@@ -54,10 +56,7 @@ export const onboardingSlice = createSlice({
         delete state.errors[field];
       }
     },
-    setError: (
-      state,
-      action: PayloadAction<{ field: string; message: string }>
-    ) => {
+    setError: (state, action: PayloadAction<{ field: string; message: string }>) => {
       const { field, message } = action.payload;
       state.errors[field] = message;
     },
@@ -103,13 +102,10 @@ export const {
 } = onboardingSlice.actions;
 
 // Selectors
-export const selectCurrentStep = (state: RootState) =>
-  state.onboarding.currentStep;
+export const selectCurrentStep = (state: RootState) => state.onboarding.currentStep;
 export const selectOnboardingData = (state: RootState) => state.onboarding.data;
 export const selectErrors = (state: RootState) => state.onboarding.errors;
-export const selectIsSubmitting = (state: RootState) =>
-  state.onboarding.isSubmitting;
-export const selectIsSubmitted = (state: RootState) =>
-  state.onboarding.isSubmitted;
+export const selectIsSubmitting = (state: RootState) => state.onboarding.isSubmitting;
+export const selectIsSubmitted = (state: RootState) => state.onboarding.isSubmitted;
 
 export default onboardingSlice.reducer;

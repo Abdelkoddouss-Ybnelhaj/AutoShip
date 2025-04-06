@@ -1,174 +1,111 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import {
-  selectCurrentStep,
-  selectOnboardingData,
-  selectErrors,
-  selectIsSubmitting,
-  selectIsSubmitted,
-  nextStep,
-  prevStep,
-  goToStep,
-  startSubmitting,
-  submissionSuccess,
-  submissionFailed,
-} from "@/store/slice/onboardingSlice";
-import { fetchUserRepos, sendOnboardingData } from "@/api/backend";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle,
-  Server,
-  Github,
-  Zap,
-  Terminal,
-  Rocket,
-} from "lucide-react";
+import { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useOnboarding } from "@/hooks/useOnboarding"
+import { useAppSelector } from "@/hooks/useRedux"
+import { selectCurrentStep } from "@/store/slice/onboardingSlice"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { ArrowLeft, ArrowRight, CheckCircle, Server, Github, Zap, Terminal, Rocket, Lock } from "lucide-react"
 
-import RepositoryStep from "./steps/RepositoryStep";
-import TriggerStep from "./steps/TriggerStep";
-import ServerStep from "./steps/ServerStep";
-import DeploymentStep from "./steps/DeploymentStep";
-import ReviewStep from "./steps/ReviewStep";
-import SuccessStep from "./steps/SuccessStep";
-import { RootState } from "@/store";
-import { useSelector } from "react-redux";
+import RepositoryStep from "./steps/RepositoryStep"
+import TriggerStep from "./steps/TriggerStep"
+import ServerStep from "./steps/ServerStep"
+import DeploymentStep from "./steps/DeploymentStep"
+import ReviewStep from "./steps/ReviewStep"
+import SuccessStep from "./steps/SuccessStep"
+import ServerCredentialsStep from "./steps/server-credentials-step"
 
-function Onboarding() {
-  const dispatch = useAppDispatch();
-  const currentStep = useAppSelector(selectCurrentStep);
-  const formData = useAppSelector(selectOnboardingData);
-  const errors = useAppSelector(selectErrors);
-  const isSubmitting = useAppSelector(selectIsSubmitting);
-  const isSubmitted = useAppSelector(selectIsSubmitted);
+ function Onboarding() {
+  const { onboardingData, errors, isSubmitting, isSubmitted, handleNext, handleBack, submitData } = useOnboarding()
 
-  const user = useSelector((state: RootState) => state.auth.user); // Access user data from Redux state
+  const currentStep = useAppSelector(selectCurrentStep)
+  const [progress, setProgress] = useState(0)
+  const [direction, setDirection] = useState(0)
 
-  console.log("User data from Redux:", user); // Log user data to check if it's available
-
-  const [progress, setProgress] = useState(0);
-  const [direction, setDirection] = useState(0);
-  const [repos, setRepos] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-
-  
-  const totalSteps = 5; // Including review step
+  // Updated to include the new step
+  const totalSteps = 7 // Including success step
 
   useEffect(() => {
     // Animate progress bar
     const timer = setTimeout(() => {
       // Calculate progress percentage (capped at 100%)
-      const progressPercentage = Math.min(
-        ((currentStep - 1) / (totalSteps - 1)) * 100,
-        100
-      );
-      setProgress(progressPercentage);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [currentStep, totalSteps]);
+      const progressPercentage = Math.min(((currentStep - 1) / (totalSteps - 1)) * 100, 100)
+      setProgress(progressPercentage)
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [currentStep, totalSteps])
 
-  // Update the validateCurrentStep function to make SSH key required
+  // Validate the current step
   const validateCurrentStep = (): boolean => {
-    let isValid = true;
-    const currentErrors: Record<string, string> = {};
+    let isValid = true
+    const currentErrors: Record<string, string> = {}
 
     switch (currentStep) {
       case 1: // Repository step
-        if (!formData.repository) {
-          currentErrors.repository = "Repository URL is required";
-          isValid = false;
-        } else if (!formData.repository.includes("github.com")) {
-          currentErrors.repository = "Please enter a valid GitHub URL";
-          isValid = false;
+        if (!onboardingData.repository) {
+          currentErrors.repository = "Repository is required"
+          isValid = false
         }
 
-        if (!formData.branch) {
-          currentErrors.branch = "Branch name is required";
-          isValid = false;
+        if (!onboardingData.branch) {
+          currentErrors.branch = "Branch name is required"
+          isValid = false
         }
-        break;
+        break
 
       case 2: // Trigger step
-        if (!formData.event) {
-          currentErrors.event = "Trigger event is required";
-          isValid = false;
+        if (!onboardingData.event) {
+          currentErrors.event = "Trigger event is required"
+          isValid = false
         }
-        break;
+        break
 
       case 3: // Server step
-        if (!formData.serverIP) {
-          currentErrors.serverIP = "Server IP address is required";
-          isValid = false;
-        } else if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(formData.serverIP)) {
-          currentErrors.serverIP = "Please enter a valid IP address";
-          isValid = false;
+        if (!onboardingData.serverIP) {
+          currentErrors.serverIP = "Server IP address is required"
+          isValid = false
+        } else if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(onboardingData.serverIP)) {
+          currentErrors.serverIP = "Please enter a valid IP address"
+          isValid = false
         }
+        break
 
-        if (!formData.sshKey) {
-          currentErrors.sshKey =
-            "SSH key is required for server authentication";
-          isValid = false;
-        }
-        break;
+      case 4: // Docker credentials step
+        // Docker credentials are optional, so no validation required
+        break
 
-      case 4: // Deployment step
-        if (!formData.runningCommand) {
-          currentErrors.runningCommand = "Run command is required";
-          isValid = false;
+      case 5: // Deployment step
+        if (!onboardingData.runningCommand) {
+          currentErrors.runningCommand = "Run command is required"
+          isValid = false
         }
-        break;
+        break
     }
 
-    // Update Redux store with validation errors
-    Object.entries(currentErrors).forEach(([field, message]) => {
-      dispatch({ type: "onboarding/setError", payload: { field, message } });
-    });
+    return isValid
+  }
 
-    return isValid;
-  };
-
-  const handleNext = () => {
+  const handleNextStep = () => {
     if (validateCurrentStep()) {
-      setDirection(1);
-      dispatch(nextStep());
+      setDirection(1)
+      handleNext()
     }
-  };
+  }
 
-  const handleBack = () => {
-    setDirection(-1);
-    dispatch(prevStep());
-  };
+  const handlePrevStep = () => {
+    setDirection(-1)
+    handleBack()
+  }
 
   const handleSubmit = async () => {
     if (validateCurrentStep()) {
-      dispatch(startSubmitting());
-      try {
-        await sendOnboardingData(formData);
-        dispatch(submissionSuccess());
-        // Move to success step (step 6)
-        dispatch(goToStep(6));
-      } catch (error) {
-        dispatch(submissionFailed());
-        // Show error message
-      }
+      await submitData()
     }
-  };
+  }
 
   // Animation variants for step transitions
   const variants = {
@@ -184,64 +121,74 @@ function Onboarding() {
       x: direction < 0 ? 100 : -100,
       opacity: 0,
     }),
-  };
+  }
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <RepositoryStep />;
+        return <RepositoryStep />
       case 2:
-        return <TriggerStep />;
+        return <TriggerStep />
       case 3:
-        return <ServerStep />;
+        return <ServerStep />
       case 4:
-        return <DeploymentStep />;
+        return <ServerCredentialsStep /> // Add Docker credentials step
       case 5:
-        return <ReviewStep onSubmit={handleSubmit} />;
+        return <DeploymentStep />
       case 6:
-        return <SuccessStep />;
+        return <ReviewStep onSubmit={handleSubmit} />
+      case 7:
+        return <SuccessStep />
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   const getStepTitle = () => {
     switch (currentStep) {
       case 1:
-        return "Repository Setup";
+        return "Repository Setup"
       case 2:
-        return "Trigger Configuration";
+        return "Trigger Configuration"
       case 3:
-        return "Server Configuration";
+        return "Server Configuration"
       case 4:
-        return "Deployment Settings";
+        return "Docker Credentials"
       case 5:
-        return "Review Configuration";
+        return "Deployment Settings"
       case 6:
-        return "Setup Complete";
+        return "Review Configuration"
+      case 7:
+        return "Setup Complete"
       default:
-        return "";
+        return ""
     }
-  };
+  }
 
   const getStepIcon = (step: number) => {
     switch (step) {
       case 1:
-        return <Github className="h-5 w-5 text-primary" />;
+        return <Github className="h-5 w-5 text-primary" />
       case 2:
-        return <Zap className="h-5 w-5 text-primary" />;
+        return <Zap className="h-5 w-5 text-primary" />
       case 3:
-        return <Server className="h-5 w-5 text-primary" />;
+        return <Server className="h-5 w-5 text-primary" />
       case 4:
-        return <Terminal className="h-5 w-5 text-primary" />;
+        return <Lock className="h-5 w-5 text-primary" />
       case 5:
-        return <CheckCircle className="h-5 w-5 text-primary" />;
+        return <Terminal className="h-5 w-5 text-primary" />
       case 6:
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-primary" />
+      case 7:
+        return <CheckCircle className="h-5 w-5 text-green-500" />
       default:
-        return <Github className="h-5 w-5 text-primary" />;
+        return <Github className="h-5 w-5 text-primary" />
     }
-  };
+  }
+
+  const isCurrentStepValid = (): boolean => {
+    return validateCurrentStep()
+  }
 
   return (
     <div className="h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
@@ -251,16 +198,13 @@ function Onboarding() {
           <div className="relative z-10">
             <div className="mb-8">
               <h2 className="text-2xl font-bold">DeployDash</h2>
-              <p className="text-muted-foreground">
-                Setup your deployment pipeline
-              </p>
+              <p className="text-muted-foreground">Setup your deployment pipeline</p>
             </div>
 
             <div className="space-y-6">
               <h3 className="text-xl font-semibold">Streamlined Deployment</h3>
               <p className="text-muted-foreground">
-                Configure once, deploy anywhere with our secure and efficient
-                pipeline.
+                Configure once, deploy anywhere with our secure and efficient pipeline.
               </p>
 
               <div className="space-y-4 mt-8">
@@ -274,35 +218,21 @@ function Onboarding() {
 
                 <div className="space-y-3">
                   {[
-                    {
-                      name: "Repository Setup",
-                      icon: <Github className="h-4 w-4" />,
-                    },
-                    {
-                      name: "Trigger Configuration",
-                      icon: <Zap className="h-4 w-4" />,
-                    },
-                    {
-                      name: "Server Configuration",
-                      icon: <Server className="h-4 w-4" />,
-                    },
-                    {
-                      name: "Deployment Settings",
-                      icon: <Terminal className="h-4 w-4" />,
-                    },
-                    {
-                      name: "Review & Submit",
-                      icon: <CheckCircle className="h-4 w-4" />,
-                    },
+                    { name: "Repository Setup", icon: <Github className="h-4 w-4" /> },
+                    { name: "Trigger Configuration", icon: <Zap className="h-4 w-4" /> },
+                    { name: "Server Configuration", icon: <Server className="h-4 w-4" /> },
+                    { name: "Docker Credentials", icon: <Lock className="h-4 w-4" /> },
+                    { name: "Deployment Settings", icon: <Terminal className="h-4 w-4" /> },
+                    { name: "Review & Submit", icon: <CheckCircle className="h-4 w-4" /> },
                   ].map((step, index) => (
                     <div
                       key={index}
                       className={`flex items-center gap-3 p-2 rounded-md transition-colors ${
                         index + 1 === currentStep
-                          ? "bg-primary/10 text-primary font-medium"
+                          ? "bg-primary text-white font-medium"
                           : index + 1 < currentStep
-                          ? "text-muted-foreground"
-                          : "text-muted-foreground/50"
+                            ? "text-muted-foreground"
+                            : "text-muted-foreground/50"
                       }`}
                     >
                       <div
@@ -310,8 +240,8 @@ function Onboarding() {
                           index + 1 === currentStep
                             ? "bg-primary text-white"
                             : index + 1 < currentStep
-                            ? "bg-primary/20 text-primary"
-                            : "bg-muted text-muted-foreground"
+                              ? "bg-primary/20 text-primary"
+                              : "bg-muted text-muted-foreground"
                         }`}
                       >
                         {index + 1 < currentStep ? "✓" : index + 1}
@@ -345,13 +275,9 @@ function Onboarding() {
             <CardHeader className="border-b bg-muted/30 py-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-xl font-bold">
-                    {getStepTitle()}
-                  </CardTitle>
+                  <CardTitle className="text-xl font-bold">{getStepTitle()}</CardTitle>
                   <CardDescription className="text-sm mt-1">
-                    {currentStep === 6
-                      ? "Your deployment pipeline is ready"
-                      : `Step ${currentStep} of ${totalSteps}`}
+                    {currentStep === 7 ? "Your deployment pipeline is ready" : `Step ${currentStep} of ${totalSteps}`}
                   </CardDescription>
                 </div>
 
@@ -380,19 +306,17 @@ function Onboarding() {
                 transition={{ type: "tween", duration: 0.3 }}
                 className="flex-1 overflow-hidden flex flex-col"
               >
-                <CardContent className="pt-6 pb-4 flex-1 overflow-auto">
-                  {renderStepContent()}
-                </CardContent>
+                <CardContent className="pt-6 pb-4 flex-1 overflow-auto">{renderStepContent()}</CardContent>
               </motion.div>
             </AnimatePresence>
 
-            {currentStep < 6 && (
+            {currentStep < 7 && (
               <CardFooter className="flex justify-between border-t p-4 bg-muted/20">
                 <div>
                   <Button
                     variant="outline"
-                    onClick={handleBack}
-                    disabled={currentStep === 1}
+                    onClick={handlePrevStep}
+                    disabled={currentStep === 1 || isSubmitting}
                     size="sm"
                     className="gap-1"
                   >
@@ -401,17 +325,17 @@ function Onboarding() {
                 </div>
 
                 <div>
-                  {currentStep < 5 ? (
-                    <Button onClick={handleNext} size="sm" className="gap-1">
+                  {currentStep < 6 ? (
+                    <Button
+                      onClick={handleNextStep}
+                      size="sm"
+                      className="gap-1"
+                      disabled={!isCurrentStepValid() || isSubmitting}
+                    >
                       Next <ArrowRight className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button
-                      onClick={handleSubmit}
-                      size="sm"
-                      className="gap-1"
-                      disabled={isSubmitting}
-                    >
+                    <Button onClick={handleSubmit} size="sm" className="gap-1" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <>
                           <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-1"></span>
@@ -431,6 +355,9 @@ function Onboarding() {
         </div>
       </div>
     </div>
-  );
+  )
 }
-export default Onboarding;
+
+
+
+export default Onboarding

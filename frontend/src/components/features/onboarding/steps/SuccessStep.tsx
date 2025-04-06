@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { CheckCircle, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import { CheckCircle, ExternalLink } from "lucide-react"
 
 export default function SuccessStep() {
   return (
@@ -13,8 +13,8 @@ export default function SuccessStep() {
       <div className="space-y-2">
         <h3 className="text-xl font-bold">Setup Complete!</h3>
         <p className="text-muted-foreground text-sm max-w-md mx-auto">
-          Your deployment pipeline has been successfully configured. You can now
-          manage your deployments from the dashboard.
+          Your deployment pipeline has been successfully configured. You can now manage your deployments from the
+          dashboard.
         </p>
       </div>
 
@@ -27,5 +27,6 @@ export default function SuccessStep() {
         </Button>
       </div>
     </div>
-  );
+  )
 }
+

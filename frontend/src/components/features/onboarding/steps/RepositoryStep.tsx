@@ -37,7 +37,7 @@ export default function RepositoryStep() {
     fetchUserRepos()
       .then((res) => {
         if (Array.isArray(res.data)) {
-          setRepos(res.data); // repo names directly
+          setRepos(res.data); // Directly use the repo names
         } else {
           console.warn("Unexpected repo data format:", res.data);
         }
@@ -90,7 +90,7 @@ export default function RepositoryStep() {
                 <SelectItem key={name} value={name}>
                   <div className="flex items-center gap-2">
                     <Github className="h-4 w-4" />
-                    {name}
+                    {name} {/* Only display the repository name */}
                   </div>
                 </SelectItem>
               ))

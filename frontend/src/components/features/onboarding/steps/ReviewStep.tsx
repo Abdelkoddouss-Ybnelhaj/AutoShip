@@ -1,35 +1,20 @@
-"use client";
+"use client"
 
-import { useAppSelector } from "@/hooks/useRedux";
-import {
-  selectOnboardingData,
-  selectIsSubmitting,
-} from "@/store/slice/onboardingSlice";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  CheckCircle,
-  FileCode2,
-  Github,
-  Info,
-  Key,
-  Layers,
-  Server,
-  Terminal,
-  Zap,
-} from "lucide-react";
+import { useOnboarding } from "@/hooks/useOnboarding"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { CheckCircle, FileCode2, Github, Info, Key, Layers, Server, Terminal, Zap } from "lucide-react"
 
 interface ReviewStepProps {
-  onSubmit: () => void;
+  onSubmit: () => void
 }
 
 export default function ReviewStep({ onSubmit }: ReviewStepProps) {
-  const formData = useAppSelector(selectOnboardingData);
-  const isSubmitting = useAppSelector(selectIsSubmitting);
+  const { onboardingData, isSubmitting } = useOnboarding()
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="space-y-3">
         <Card>
           <CardHeader className="py-3 px-4">
@@ -41,18 +26,12 @@ export default function ReviewStep({ onSubmit }: ReviewStepProps) {
           <CardContent className="py-2 px-4">
             <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-sm">
               <div className="flex justify-between md:block">
-                <dt className="text-muted-foreground text-xs">
-                  GitHub Repository:
-                </dt>
-                <dd className="font-medium text-xs md:mt-0.5">
-                  {formData.repository}
-                </dd>
+                <dt className="text-muted-foreground text-xs">GitHub Repository:</dt>
+                <dd className="font-medium text-xs md:mt-0.5">{onboardingData.repository}</dd>
               </div>
               <div className="flex justify-between md:block">
                 <dt className="text-muted-foreground text-xs">Branch:</dt>
-                <dd className="font-medium text-xs md:mt-0.5">
-                  {formData.branch}
-                </dd>
+                <dd className="font-medium text-xs md:mt-0.5">{onboardingData.branch}</dd>
               </div>
             </dl>
           </CardContent>
@@ -68,12 +47,8 @@ export default function ReviewStep({ onSubmit }: ReviewStepProps) {
           <CardContent className="py-2 px-4">
             <dl className="grid grid-cols-1 gap-y-1 text-sm">
               <div className="flex justify-between md:block">
-                <dt className="text-muted-foreground text-xs">
-                  Trigger Event:
-                </dt>
-                <dd className="font-medium text-xs md:mt-0.5 capitalize">
-                  {formData.event.replace("_", " ")}
-                </dd>
+                <dt className="text-muted-foreground text-xs">Trigger Event:</dt>
+                <dd className="font-medium text-xs md:mt-0.5 capitalize">{onboardingData.event.replace("_", " ")}</dd>
               </div>
             </dl>
           </CardContent>
@@ -90,18 +65,28 @@ export default function ReviewStep({ onSubmit }: ReviewStepProps) {
             <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm">
               <div className="flex justify-between md:block">
                 <dt className="text-muted-foreground text-xs">Server IP:</dt>
-                <dd className="font-medium text-xs md:mt-0.5">
-                  {formData.serverIP}
-                </dd>
+                <dd className="font-medium text-xs md:mt-0.5">{onboardingData.serverIP}</dd>
               </div>
-              <div className="mt-1">
-                <dt className="text-muted-foreground text-xs flex items-center gap-1">
-                  <Key className="h-3 w-3" /> SSH Key:
-                </dt>
-                <dd className="font-mono text-[10px] bg-muted p-2 rounded mt-1 overflow-auto max-h-16">
-                  {formData.sshKey}
-                </dd>
-              </div>
+              {onboardingData.serverUsername && (
+                <div className="flex justify-between md:block mt-1">
+                  <dt className="text-muted-foreground text-xs">Server Username:</dt>
+                  <dd className="font-medium text-xs md:mt-0.5">{onboardingData.serverUsername}</dd>
+                </div>
+              )}
+              {(onboardingData.sshPrivateKey || onboardingData.sshPublicKey) && (
+                <div className="mt-1">
+                  <dt className="text-muted-foreground text-xs flex items-center gap-1">
+                    <Key className="h-3 w-3" /> SSH Keys:
+                  </dt>
+                  <dd className="font-medium text-xs md:mt-0.5">
+                    {onboardingData.sshPrivateKey && onboardingData.sshPublicKey
+                      ? "Private and Public Keys provided"
+                      : onboardingData.sshPrivateKey
+                        ? "Private Key provided"
+                        : "Public Key provided"}
+                  </dd>
+                </div>
+              )}
             </dl>
           </CardContent>
         </Card>
@@ -116,11 +101,9 @@ export default function ReviewStep({ onSubmit }: ReviewStepProps) {
           <CardContent className="py-2 px-4">
             <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-sm">
               <div className="flex justify-between md:block">
-                <dt className="text-muted-foreground text-xs">
-                  Deployment Method:
-                </dt>
+                <dt className="text-muted-foreground text-xs">Deployment Method:</dt>
                 <dd className="font-medium text-xs md:mt-0.5 flex items-center gap-1">
-                  {formData.useDockerCompose ? (
+                  {onboardingData.useDockerCompose ? (
                     <>
                       <Layers className="h-3 w-3" /> Docker Compose
                     </>
@@ -134,9 +117,18 @@ export default function ReviewStep({ onSubmit }: ReviewStepProps) {
               <div className="flex justify-between md:block">
                 <dt className="text-muted-foreground text-xs">Run Command:</dt>
                 <dd className="font-medium md:mt-0.5 font-mono text-[10px] bg-muted p-1 rounded mt-1">
-                  {formData.runningCommand}
+                  {onboardingData.runningCommand}
                 </dd>
               </div>
+              {onboardingData.dockerUsername && (
+                <div className="flex justify-between md:block col-span-2 mt-1">
+                  <dt className="text-muted-foreground text-xs">Docker Credentials:</dt>
+                  <dd className="font-medium text-xs md:mt-0.5">
+                    {onboardingData.dockerUsername}{" "}
+                    {onboardingData.dockerPassword ? "(with password)" : "(without password)"}
+                  </dd>
+                </div>
+              )}
             </dl>
           </CardContent>
         </Card>
@@ -150,12 +142,7 @@ export default function ReviewStep({ onSubmit }: ReviewStepProps) {
       </Alert>
 
       <div className="flex justify-center pt-2">
-        <Button
-          onClick={onSubmit}
-          className="gap-1 w-full"
-          disabled={isSubmitting}
-          size="sm"
-        >
+        <Button onClick={onSubmit} className="gap-1 w-full" disabled={isSubmitting} size="sm">
           {isSubmitting ? (
             <>
               <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-1"></span>
@@ -169,5 +156,6 @@ export default function ReviewStep({ onSubmit }: ReviewStepProps) {
         </Button>
       </div>
     </div>
-  );
+  )
 }
+
