@@ -21,8 +21,11 @@ public class GithubOauthService implements OauthService {
 
     @Override
     public List<String> getUserRepos(String token)  {
+
         String accessToken = jwtService.extractKey(token,"access-token");
         String login = jwtService.extractKey(token,"login");
+
+        log.info("Attempting to fetch user {} github repos",login);
 
         String apiUrl = "https://api.github.com/users/"+login+"/repos";
 
@@ -33,6 +36,7 @@ public class GithubOauthService implements OauthService {
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
+        log.info("Sending an HTTP request to fect user {} repos",login);
         ResponseEntity<Map[]> response = restTemplate.exchange(
                 apiUrl,
                 HttpMethod.GET,
@@ -47,6 +51,7 @@ public class GithubOauthService implements OauthService {
             }
         }
 
+        log.info("Successfully returning user {} repos",login);
         return repoNames;
     }
 }
