@@ -12,7 +12,7 @@ public class WebConfig {
 
     private final String clientUrl;
 
-    public WebConfig(@Value("${spring.security.oauth2.client-url}") String clientUrl) {
+    public WebConfig(@Value("${spring.security.oauth2.client-url:http://localhost:5173}") String clientUrl) {
         this.clientUrl = clientUrl;
     }
 
