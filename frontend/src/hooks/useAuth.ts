@@ -10,6 +10,7 @@ import {
 import { removeToken, getUserFromToken, getToken } from "@/utils/auth";
 import type { RootState } from "@/store";
 import { useNavigate } from "react-router-dom";
+import { m } from "framer-motion";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
@@ -20,6 +21,8 @@ export const useAuth = () => {
 
   // Login function - redirects to GitHub OAuth
   const login = () => {
+    console.log(import.meta.env.VITE_API_BASE_URL
+    )
     try {
       setIsLoading(true);
       window.location.href = `${

@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+  postgres-db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: autoShipDB
+    container_name: postgres-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    image: abdo001/autoship:backv1.1
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/autoShipDB
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - GITHUB-CLIENT-ID=Ov23liy74DG4Xk7DcqcK
+      - GITHUB-CLIENT-SECRET=cadb755325e91442fb78f9234ad7511718235c78
+      - CLIENT-URL=http://localhost:5173
+    container_name: api-backend
+    depends_on:
+      - postgres-db
+
+  frontend:
+    image: rida999/autoship-frontend:v1.0
+    ports:
+      - "5173:80"  # Maps nginx port 80 inside the container to localhost:5173
+    container_name: frontend
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+    driver: local

@@ -1,56 +1,33 @@
-"use client";
+"use client"
 
-import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import {
-  selectOnboardingData,
-  selectErrors,
-  setField,
-} from "@/store/slice/onboardingSlice";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { AlertCircle, Github, Code, HelpCircle, Info } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useEffect, useState } from "react";
-import { fetchUserRepos } from "@/api/backend";
+import { useEffect, useState } from "react"
+import { useOnboarding } from "@/hooks/useOnboarding"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { AlertCircle, Github, Code, HelpCircle, Info } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { fetchUserRepos } from "@/api/backend"
 
 export default function RepositoryStep() {
-  const dispatch = useAppDispatch();
-  const formData = useAppSelector(selectOnboardingData);
-  const errors = useAppSelector(selectErrors);
-
-  const [repos, setRepos] = useState<string[]>([]);
+  const { onboardingData, errors, updateOnboardingData } = useOnboarding()
+  const [repos, setRepos] = useState<string[]>([])
 
   useEffect(() => {
     fetchUserRepos()
       .then((res) => {
         if (Array.isArray(res.data)) {
-          setRepos(res.data); // Directly use the repo names
+          setRepos(res.data) // Directly use the repo names
         } else {
-          console.warn("Unexpected repo data format:", res.data);
+          console.warn("Unexpected repo data format:", res.data)
         }
       })
       .catch((err) => {
-        console.error("Repo fetch failed", err);
+        console.error("Repo fetch failed", err)
         // Optionally trigger login or retry
-      });
-  }, []);
-
-  const handleChange = (field: keyof typeof formData, value: string) => {
-    dispatch(setField({ field, value }));
-  };
+      })
+  }, [])
 
   return (
     <div className="space-y-4">
@@ -72,13 +49,8 @@ export default function RepositoryStep() {
           </TooltipProvider>
         </div>
 
-        <Select
-          value={formData.repository}
-          onValueChange={(value) => handleChange("repository", value)}
-        >
-          <SelectTrigger
-            className={`${errors.repository ? "border-destructive" : ""}`}
-          >
+        <Select value={onboardingData.repository} onValueChange={(value) => updateOnboardingData("repository", value)}>
+          <SelectTrigger className={`${errors.repository ? "border-destructive" : ""}`}>
             <div className="flex items-center gap-2">
               <SelectValue placeholder="Select a repository" />
             </div>
@@ -95,9 +67,7 @@ export default function RepositoryStep() {
                 </SelectItem>
               ))
             ) : (
-              <div className="p-2 text-sm text-muted-foreground">
-                No repositories found.
-              </div>
+              <div className="p-2 text-sm text-muted-foreground">No repositories found.</div>
             )}
           </SelectContent>
         </Select>
@@ -133,8 +103,8 @@ export default function RepositoryStep() {
           <Code className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="branch"
-            value={formData.branch}
-            onChange={(e) => handleChange("branch", e.target.value)}
+            value={onboardingData.branch}
+            onChange={(e) => updateOnboardingData("branch", e.target.value)}
             placeholder="main"
             className={`pl-10 ${errors.branch ? "border-destructive" : ""}`}
           />
@@ -145,8 +115,7 @@ export default function RepositoryStep() {
           </p>
         )}
         <p className="text-xs text-muted-foreground mt-1">
-          The branch that will be used for deployment. Common values are 'main'
-          or 'master'.
+          The branch that will be used for deployment. Common values are 'main' or 'master'.
         </p>
       </div>
 
@@ -154,10 +123,11 @@ export default function RepositoryStep() {
       <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 text-blue-800 dark:text-blue-300">
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Make sure you have the necessary permissions to access this
-          repository. You'll need admin or write access to set up webhooks.
+          Make sure you have the necessary permissions to access this repository. You'll need admin or write access to
+          set up webhooks.
         </AlertDescription>
       </Alert>
     </div>
-  );
+  )
 }
+
