@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import static com.example.autoship.common.MessageKeys.*;
+
 @RestControllerAdvice
 @AllArgsConstructor
 @Slf4j
@@ -23,8 +25,19 @@ public class GlobalExceptionHandler {
         return responseBuilder.buildResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage());
     }
 
+    @ExceptionHandler(GithubRequestException.class)
+    public ResponseEntity<ApiResponse<String>> handleGithubRequestException(GithubRequestException ex) {
+        return responseBuilder.buildResponse(ex.getStatus(), ex.getStatus() == 404 ?  ERROR_REPO_NOT_FOUND : ERROR_HOOK_EXIST);
+    }
+
+    @ExceptionHandler(InvalidJwtException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidJwtException(InvalidJwtException ex) {
+        log.warn("Invalid JWT: {}", ex.getMessage());
+        return responseBuilder.buildResponse(401,ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleGlobalException(Exception ex) {
-        return responseBuilder.buildResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred");
+        return responseBuilder.buildResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage());
     }
 }
