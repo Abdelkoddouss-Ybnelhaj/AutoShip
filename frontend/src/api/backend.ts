@@ -1,0 +1,73 @@
+import axios from "axios";
+import { getToken } from "@/utils/auth";
+
+// Type definition for onboarding data
+export interface OnboardingData {
+  repository: string;
+  branch: string;
+  events: string[]; // Changed from event to events array
+  serverIP: string;
+  sshPrivateKey: string;
+  dockerUsername: string;
+  dockerPassword: string;
+  dockerRegistry: string; // Added Docker registry
+  serverUsername: string;
+  useDockerCompose: boolean;
+  runningCommand: string;
+}
+
+export async function sendOnboardingData(data: OnboardingData): Promise<void> {
+  // This would be a real API call in a production app
+  return new Promise((resolve, reject) => {
+    // Simulate network delay
+    setTimeout(() => {
+      // Simulate successful API call
+      console.log("Sending onboarding data to API:", data);
+      resolve();
+
+      // Uncomment to simulate an error
+      // reject(new Error('API error'));
+    }, 2000);
+  });
+}
+
+export async function generateSSHKey(): Promise<string> {
+  // In a real app, this would call an API to generate a key pair
+  // For demo purposes, we'll return a mock SSH key
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const mockSSHKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA1234567890abcdefghijklmnopqrstuvwxyz1234567890
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+-----END RSA PRIVATE KEY-----`;
+      resolve(mockSSHKey);
+    }, 500);
+  });
+}
+
+export const fetchUserRepos = async () => {
+  const token = getToken();
+
+  if (!token) throw new Error("No token found");
+
+  try {
+    const response = await axios.get("http://localhost:8080/api/v1/repos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("Repos fetched:", response.data);
+    return response.data;
+  } catch (err) {
+    console.error("Failed to fetch repos:", err);
+    throw err;
+  }
+};
