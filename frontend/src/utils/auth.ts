@@ -31,7 +31,6 @@ export const getUserFromToken = (token?: string): DecodedToken | null => {
   try {
     const decoded = jwtDecode<DecodedToken>(tokenToDecode);
 
-    // Check token expiration
     if (decoded.exp * 1000 < Date.now()) {
       removeToken();
       return null;
