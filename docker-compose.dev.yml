@@ -10,8 +10,6 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: autoShipDB
     container_name: postgres-db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
 
   api:
     build:
@@ -22,13 +20,10 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/autoShipDB
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin
-      - GITHUB-CLIENT-ID==
+      - GITHUB-CLIENT-ID=
       - GITHUB-CLIENT-SECRET=
       - CLIENT-URL=http://localhost:5321
+      - WEBHOOK-URL=https://aserti.com/webhook
     container_name: api-backend
     depends_on:
       - postgres-db
-
-volumes:
-  postgres_data:
-    driver: local

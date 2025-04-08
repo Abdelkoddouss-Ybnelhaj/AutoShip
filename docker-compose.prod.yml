@@ -24,6 +24,7 @@ services:
       - GITHUB-CLIENT-ID=
       - GITHUB-CLIENT-SECRET=
       - CLIENT-URL=http://localhost:5321
+      - WEBHOOK-URL=https://aserti.com/webhook
     container_name: api-backend
     depends_on:
       - postgres-db

@@ -4,15 +4,15 @@ spring:
       client:
         registration:
           github:
-            client-id:
-            client-secret:
+            client-id: ${GITHUB-CLIENT-ID}
+            client-secret: ${GITHUB-CLIENT-SECRET}
             scope: repo, admin:repo_hook, read:user, user:email
-      client-url: http://localhost:3000
+      client-url: ${CLIENT-URL}
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/autoShipDB
-    username: postgres
-    password: admin
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -27,5 +27,5 @@ spring:
         jdbc:
           time_zone: UTC
 
-  webhook-url: https://aserti.com/webhook
+  webhook-url: ${WEBHOOK-URL}
   github-api: https://api.github.com
