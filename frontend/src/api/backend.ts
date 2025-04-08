@@ -5,12 +5,12 @@ import { getToken } from "@/utils/auth";
 export interface OnboardingData {
   repository: string;
   branch: string;
-  event: string;
+  events: string[]; // Changed from event to events array
   serverIP: string;
   sshPrivateKey: string;
-  sshPublicKey: string;
   dockerUsername: string;
   dockerPassword: string;
+  dockerRegistry: string; // Added Docker registry
   serverUsername: string;
   useDockerCompose: boolean;
   runningCommand: string;
@@ -36,10 +36,17 @@ export async function generateSSHKey(): Promise<string> {
   // For demo purposes, we'll return a mock SSH key
   return new Promise((resolve) => {
     setTimeout(() => {
-      const mockSSHKey = `ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDEXAMPLEKEYWOULDBE
-FORDEMOPURPOSESXYZabcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLM
-NOPQRSTUVWXYZ+/abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOP
-QRSTUVWXYZ+/abcdefghijklmnopqrstuvwxyz0123456789== user@example.com`;
+      const mockSSHKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA1234567890abcdefghijklmnopqrstuvwxyz1234567890
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz
+-----END RSA PRIVATE KEY-----`;
       resolve(mockSSHKey);
     }, 500);
   });

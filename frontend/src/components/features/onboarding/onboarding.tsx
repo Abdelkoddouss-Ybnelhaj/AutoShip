@@ -1,111 +1,210 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useOnboarding } from "@/hooks/useOnboarding"
-import { useAppSelector } from "@/hooks/useRedux"
-import { selectCurrentStep } from "@/store/slice/onboardingSlice"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ArrowRight, CheckCircle, Server, Github, Zap, Terminal, Rocket, Lock } from "lucide-react"
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { useAppSelector, useAppDispatch } from "@/hooks/useRedux";
+import { selectCurrentStep, setError } from "@/store/slice/onboardingSlice";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  Server,
+  Github,
+  Zap,
+  Terminal,
+  Rocket,
+  Lock,
+} from "lucide-react";
 
-import RepositoryStep from "./steps/RepositoryStep"
-import TriggerStep from "./steps/TriggerStep"
-import ServerStep from "./steps/ServerStep"
-import DeploymentStep from "./steps/DeploymentStep"
-import ReviewStep from "./steps/ReviewStep"
-import SuccessStep from "./steps/SuccessStep"
-import ServerCredentialsStep from "./steps/server-credentials-step"
+import RepositoryStep from "./steps/RepositoryStep";
+import TriggerStep from "./steps/TriggerStep";
+import ServerStep from "./steps/ServerStep";
+import DeploymentStep from "./steps/DeploymentStep";
+import ReviewStep from "./steps/ReviewStep";
+import SuccessStep from "./steps/SuccessStep";
+import ServerCredentialsStep from "./steps/server-credentials-step";
 
- function Onboarding() {
-  const { onboardingData, errors, isSubmitting, isSubmitted, handleNext, handleBack, submitData } = useOnboarding()
-
-  const currentStep = useAppSelector(selectCurrentStep)
-  const [progress, setProgress] = useState(0)
-  const [direction, setDirection] = useState(0)
+function Onboarding() {
+  const {
+    onboardingData,
+    errors,
+    isSubmitting,
+    isSubmitted,
+    handleNext,
+    handleBack,
+    submitData,
+  } = useOnboarding();
+  const dispatch = useAppDispatch();
+  const currentStep = useAppSelector(selectCurrentStep);
+  const [progress, setProgress] = useState(0);
+  const [direction, setDirection] = useState(0);
 
   // Updated to include the new step
-  const totalSteps = 7 // Including success step
+  const totalSteps = 7; // Including success step
 
   useEffect(() => {
     // Animate progress bar
     const timer = setTimeout(() => {
-      // Calculate progress percentage (capped at 100%)
-      const progressPercentage = Math.min(((currentStep - 1) / (totalSteps - 1)) * 100, 100)
-      setProgress(progressPercentage)
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [currentStep, totalSteps])
+      // Calculate progress percentage - ensure it reaches 100% at the final step
+      const progressPercentage = Math.min(
+        (currentStep / (totalSteps - 1)) * 100,
+        100
+      );
+      setProgress(progressPercentage);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [currentStep, totalSteps]);
 
   // Validate the current step
   const validateCurrentStep = (): boolean => {
-    let isValid = true
-    const currentErrors: Record<string, string> = {}
+    let isValid = true;
 
     switch (currentStep) {
       case 1: // Repository step
         if (!onboardingData.repository) {
-          currentErrors.repository = "Repository is required"
-          isValid = false
+          dispatch(
+            setError({ field: "repository", message: "Repository is required" })
+          );
+          isValid = false;
         }
 
         if (!onboardingData.branch) {
-          currentErrors.branch = "Branch name is required"
-          isValid = false
+          dispatch(
+            setError({ field: "branch", message: "Branch name is required" })
+          );
+          isValid = false;
         }
-        break
+        break;
 
       case 2: // Trigger step
-        if (!onboardingData.event) {
-          currentErrors.event = "Trigger event is required"
-          isValid = false
+        if (onboardingData.events.length === 0) {
+          dispatch(
+            setError({
+              field: "events",
+              message: "At least one trigger event is required",
+            })
+          );
+          isValid = false;
         }
-        break
+        break;
 
       case 3: // Server step
         if (!onboardingData.serverIP) {
-          currentErrors.serverIP = "Server IP address is required"
-          isValid = false
+          dispatch(
+            setError({
+              field: "serverIP",
+              message: "Server IP address is required",
+            })
+          );
+          isValid = false;
         } else if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(onboardingData.serverIP)) {
-          currentErrors.serverIP = "Please enter a valid IP address"
-          isValid = false
+          dispatch(
+            setError({
+              field: "serverIP",
+              message: "Please enter a valid IP address",
+            })
+          );
+          isValid = false;
         }
-        break
+
+        if (!onboardingData.serverUsername) {
+          dispatch(
+            setError({
+              field: "serverUsername",
+              message: "Server username is required",
+            })
+          );
+          isValid = false;
+        }
+
+        if (!onboardingData.sshPrivateKey) {
+          dispatch(
+            setError({
+              field: "sshPrivateKey",
+              message: "SSH private key is required",
+            })
+          );
+          isValid = false;
+        }
+        break;
 
       case 4: // Docker credentials step
-        // Docker credentials are optional, so no validation required
-        break
+        if (!onboardingData.dockerRegistry) {
+          dispatch(
+            setError({
+              field: "dockerRegistry",
+              message: "Docker registry is required",
+            })
+          );
+          isValid = false;
+        }
+
+        if (!onboardingData.dockerUsername) {
+          dispatch(
+            setError({
+              field: "dockerUsername",
+              message: "Docker username is required",
+            })
+          );
+          isValid = false;
+        }
+
+        if (!onboardingData.dockerPassword) {
+          dispatch(
+            setError({
+              field: "dockerPassword",
+              message: "Docker password is required",
+            })
+          );
+          isValid = false;
+        }
+        break;
 
       case 5: // Deployment step
         if (!onboardingData.runningCommand) {
-          currentErrors.runningCommand = "Run command is required"
-          isValid = false
+          dispatch(
+            setError({
+              field: "runningCommand",
+              message: "Run command is required",
+            })
+          );
+          isValid = false;
         }
-        break
+        break;
     }
 
-    return isValid
-  }
+    return isValid;
+  };
 
   const handleNextStep = () => {
     if (validateCurrentStep()) {
-      setDirection(1)
-      handleNext()
+      setDirection(1);
+      handleNext();
     }
-  }
+  };
 
   const handlePrevStep = () => {
-    setDirection(-1)
-    handleBack()
-  }
+    setDirection(-1);
+    handleBack();
+  };
 
   const handleSubmit = async () => {
     if (validateCurrentStep()) {
-      await submitData()
+      await submitData();
     }
-  }
+  };
 
   // Animation variants for step transitions
   const variants = {
@@ -121,74 +220,74 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
       x: direction < 0 ? 100 : -100,
       opacity: 0,
     }),
-  }
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <RepositoryStep />
+        return <RepositoryStep />;
       case 2:
-        return <TriggerStep />
+        return <TriggerStep />;
       case 3:
-        return <ServerStep />
+        return <ServerStep />;
       case 4:
-        return <ServerCredentialsStep /> // Add Docker credentials step
+        return <ServerCredentialsStep />;
       case 5:
-        return <DeploymentStep />
+        return <DeploymentStep />;
       case 6:
-        return <ReviewStep onSubmit={handleSubmit} />
+        return <ReviewStep onSubmit={handleSubmit} />;
       case 7:
-        return <SuccessStep />
+        return <SuccessStep />;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const getStepTitle = () => {
     switch (currentStep) {
       case 1:
-        return "Repository Setup"
+        return "Repository Setup";
       case 2:
-        return "Trigger Configuration"
+        return "Trigger Configuration";
       case 3:
-        return "Server Configuration"
+        return "Server Configuration";
       case 4:
-        return "Docker Credentials"
+        return "Docker Registry";
       case 5:
-        return "Deployment Settings"
+        return "Deployment Settings";
       case 6:
-        return "Review Configuration"
+        return "Review Configuration";
       case 7:
-        return "Setup Complete"
+        return "Setup Complete";
       default:
-        return ""
+        return "";
     }
-  }
+  };
 
   const getStepIcon = (step: number) => {
     switch (step) {
       case 1:
-        return <Github className="h-5 w-5 text-primary" />
+        return <Github className="h-5 w-5 text-primary" />;
       case 2:
-        return <Zap className="h-5 w-5 text-primary" />
+        return <Zap className="h-5 w-5 text-primary" />;
       case 3:
-        return <Server className="h-5 w-5 text-primary" />
+        return <Server className="h-5 w-5 text-primary" />;
       case 4:
-        return <Lock className="h-5 w-5 text-primary" />
+        return <Lock className="h-5 w-5 text-primary" />;
       case 5:
-        return <Terminal className="h-5 w-5 text-primary" />
+        return <Terminal className="h-5 w-5 text-primary" />;
       case 6:
-        return <CheckCircle className="h-5 w-5 text-primary" />
+        return <CheckCircle className="h-5 w-5 text-primary" />;
       case 7:
-        return <CheckCircle className="h-5 w-5 text-green-500" />
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
       default:
-        return <Github className="h-5 w-5 text-primary" />
+        return <Github className="h-5 w-5 text-primary" />;
     }
-  }
+  };
 
   const isCurrentStepValid = (): boolean => {
-    return validateCurrentStep()
-  }
+    return validateCurrentStep();
+  };
 
   return (
     <div className="h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
@@ -198,13 +297,16 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
           <div className="relative z-10">
             <div className="mb-8">
               <h2 className="text-2xl font-bold">DeployDash</h2>
-              <p className="text-muted-foreground">Setup your deployment pipeline</p>
+              <p className="text-muted-foreground">
+                Setup your deployment pipeline
+              </p>
             </div>
 
             <div className="space-y-6">
               <h3 className="text-xl font-semibold">Streamlined Deployment</h3>
               <p className="text-muted-foreground">
-                Configure once, deploy anywhere with our secure and efficient pipeline.
+                Configure once, deploy anywhere with our secure and efficient
+                pipeline.
               </p>
 
               <div className="space-y-4 mt-8">
@@ -218,12 +320,30 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
 
                 <div className="space-y-3">
                   {[
-                    { name: "Repository Setup", icon: <Github className="h-4 w-4" /> },
-                    { name: "Trigger Configuration", icon: <Zap className="h-4 w-4" /> },
-                    { name: "Server Configuration", icon: <Server className="h-4 w-4" /> },
-                    { name: "Docker Credentials", icon: <Lock className="h-4 w-4" /> },
-                    { name: "Deployment Settings", icon: <Terminal className="h-4 w-4" /> },
-                    { name: "Review & Submit", icon: <CheckCircle className="h-4 w-4" /> },
+                    {
+                      name: "Repository Setup",
+                      icon: <Github className="h-4 w-4" />,
+                    },
+                    {
+                      name: "Trigger Configuration",
+                      icon: <Zap className="h-4 w-4" />,
+                    },
+                    {
+                      name: "Server Configuration",
+                      icon: <Server className="h-4 w-4" />,
+                    },
+                    {
+                      name: "Docker Registry",
+                      icon: <Lock className="h-4 w-4" />,
+                    },
+                    {
+                      name: "Deployment Settings",
+                      icon: <Terminal className="h-4 w-4" />,
+                    },
+                    {
+                      name: "Review & Submit",
+                      icon: <CheckCircle className="h-4 w-4" />,
+                    },
                   ].map((step, index) => (
                     <div
                       key={index}
@@ -231,8 +351,8 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
                         index + 1 === currentStep
                           ? "bg-primary text-white font-medium"
                           : index + 1 < currentStep
-                            ? "text-muted-foreground"
-                            : "text-muted-foreground/50"
+                          ? "text-muted-foreground"
+                          : "text-muted-foreground/50"
                       }`}
                     >
                       <div
@@ -240,8 +360,8 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
                           index + 1 === currentStep
                             ? "bg-primary text-white"
                             : index + 1 < currentStep
-                              ? "bg-primary/20 text-primary"
-                              : "bg-muted text-muted-foreground"
+                            ? "bg-primary/20 text-primary"
+                            : "bg-muted text-muted-foreground"
                         }`}
                       >
                         {index + 1 < currentStep ? "✓" : index + 1}
@@ -275,9 +395,13 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
             <CardHeader className="border-b bg-muted/30 py-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-xl font-bold">{getStepTitle()}</CardTitle>
+                  <CardTitle className="text-xl font-bold">
+                    {getStepTitle()}
+                  </CardTitle>
                   <CardDescription className="text-sm mt-1">
-                    {currentStep === 7 ? "Your deployment pipeline is ready" : `Step ${currentStep} of ${totalSteps}`}
+                    {currentStep === 7
+                      ? "Your deployment pipeline is ready"
+                      : `Step ${currentStep} of ${totalSteps - 1}`}
                   </CardDescription>
                 </div>
 
@@ -306,7 +430,9 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
                 transition={{ type: "tween", duration: 0.3 }}
                 className="flex-1 overflow-hidden flex flex-col"
               >
-                <CardContent className="pt-6 pb-4 flex-1 overflow-auto">{renderStepContent()}</CardContent>
+                <CardContent className="pt-6 pb-4 flex-1 overflow-auto">
+                  {renderStepContent()}
+                </CardContent>
               </motion.div>
             </AnimatePresence>
 
@@ -335,7 +461,12 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
                       Next <ArrowRight className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button onClick={handleSubmit} size="sm" className="gap-1" disabled={isSubmitting}>
+                    <Button
+                      onClick={handleSubmit}
+                      size="sm"
+                      className="gap-1"
+                      disabled={isSubmitting}
+                    >
                       {isSubmitting ? (
                         <>
                           <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-1"></span>
@@ -355,9 +486,7 @@ import ServerCredentialsStep from "./steps/server-credentials-step"
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-
-
-export default Onboarding
+export default Onboarding;

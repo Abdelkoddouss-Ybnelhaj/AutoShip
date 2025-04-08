@@ -1,25 +1,69 @@
-"use client"
+"use client";
 
-import { useOnboarding } from "@/hooks/useOnboarding"
-import { Card, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { AlertCircle, ArrowRight, FileCode2, HelpCircle, Info, Layers } from "lucide-react"
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertCircle,
+  ArrowRight,
+  FileCode2,
+  HelpCircle,
+  Info,
+  Layers,
+  Tag,
+} from "lucide-react";
 
 export default function TriggerStep() {
-  const { onboardingData, errors, updateOnboardingData } = useOnboarding()
+  const { onboardingData, errors, toggleTriggerEvent } = useOnboarding();
 
-  const handleEventChange = (value: string) => {
-    updateOnboardingData("event", value)
-  }
+  const triggerEvents = [
+    {
+      id: "push",
+      name: "Push",
+      description: "Deploy when code is pushed to the repository",
+      icon: <ArrowRight className="h-5 w-5" />,
+    },
+    {
+      id: "pull_request",
+      name: "Pull Request",
+      description: "Deploy when pull requests are opened or updated",
+      icon: <FileCode2 className="h-5 w-5" />,
+    },
+    {
+      id: "release",
+      name: "Release",
+      description: "Deploy when a new release is created",
+      icon: <Tag className="h-5 w-5" />,
+    },
+    {
+      id: "workflow_dispatch",
+      name: "Manual Trigger",
+      description: "Deploy manually through GitHub Actions",
+      icon: <Layers className="h-5 w-5" />,
+    },
+  ];
 
   return (
     <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Select Trigger Events</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Choose one or more events that will trigger your deployment pipeline.
+        </p>
+      </div>
+
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="event" className="text-sm font-medium">
-            Trigger Event
+            Trigger Events <span className="text-destructive">*</span>
           </Label>
           <TooltipProvider>
             <Tooltip>
@@ -27,78 +71,67 @@ export default function TriggerStep() {
                 <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-sm">
-                <p>Specify which GitHub event will trigger the deployment</p>
+                <p>
+                  Select one or more GitHub events that will trigger the
+                  deployment
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          <Card
-            className={`cursor-pointer border-2 transition-all ${
-              onboardingData.event === "push" ? "border-primary bg-primary/5" : "hover:border-primary/50"
-            }`}
-            onClick={() => handleEventChange("push")}
-          >
-            <CardContent className="p-4 flex flex-col items-center text-center">
-              <div
-                className={`p-2 rounded-full mb-2 ${onboardingData.event === "push" ? "bg-primary/10" : "bg-muted"}`}
-              >
-                <ArrowRight
-                  className={`h-5 w-5 ${onboardingData.event === "push" ? "text-primary" : "text-muted-foreground"}`}
-                />
-              </div>
-              <h4 className="font-medium">Push</h4>
-              <p className="text-xs text-muted-foreground mt-1">Deploy when code is pushed</p>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`cursor-pointer border-2 transition-all ${
-              onboardingData.event === "pull_request" ? "border-primary bg-primary/5" : "hover:border-primary/50"
-            }`}
-            onClick={() => handleEventChange("pull_request")}
-          >
-            <CardContent className="p-4 flex flex-col items-center text-center">
-              <div
-                className={`p-2 rounded-full mb-2 ${
-                  onboardingData.event === "pull_request" ? "bg-primary/10" : "bg-muted"
-                }`}
-              >
-                <FileCode2
-                  className={`h-5 w-5 ${
-                    onboardingData.event === "pull_request" ? "text-primary" : "text-muted-foreground"
-                  }`}
-                />
-              </div>
-              <h4 className="font-medium">Pull Request</h4>
-              <p className="text-xs text-muted-foreground mt-1">Deploy on PR events</p>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`cursor-pointer border-2 transition-all ${
-              onboardingData.event === "release" ? "border-primary bg-primary/5" : "hover:border-primary/50"
-            }`}
-            onClick={() => handleEventChange("release")}
-          >
-            <CardContent className="p-4 flex flex-col items-center text-center">
-              <div
-                className={`p-2 rounded-full mb-2 ${onboardingData.event === "release" ? "bg-primary/10" : "bg-muted"}`}
-              >
-                <Layers
-                  className={`h-5 w-5 ${onboardingData.event === "release" ? "text-primary" : "text-muted-foreground"}`}
-                />
-              </div>
-              <h4 className="font-medium">Release</h4>
-              <p className="text-xs text-muted-foreground mt-1">Deploy on new releases</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 gap-4 pt-2">
+          {triggerEvents.map((event) => (
+            <Card
+              key={event.id}
+              className={`cursor-pointer border-2 transition-all ${
+                onboardingData.events.includes(event.id)
+                  ? "border-primary bg-primary/5"
+                  : "hover:border-primary/50"
+              }`}
+              onClick={() => toggleTriggerEvent(event.id)}
+            >
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="flex items-center h-5 mt-1">
+                  <Checkbox
+                    checked={onboardingData.events.includes(event.id)}
+                    onCheckedChange={() => toggleTriggerEvent(event.id)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`p-1.5 rounded-full ${
+                        onboardingData.events.includes(event.id)
+                          ? "bg-primary/10"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <span
+                        className={
+                          onboardingData.events.includes(event.id)
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        {event.icon}
+                      </span>
+                    </div>
+                    <h4 className="font-medium">{event.name}</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {event.description}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {errors.event && (
+        {errors.events && (
           <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-            <AlertCircle className="h-3 w-3" /> {errors.event}
+            <AlertCircle className="h-3 w-3" /> {errors.events}
           </p>
         )}
       </div>
@@ -106,37 +139,33 @@ export default function TriggerStep() {
       <div className="bg-muted/30 p-4 rounded-lg border">
         <h4 className="font-medium mb-2 flex items-center gap-2">
           <Info className="h-4 w-4 text-primary" />
-          Event Details
+          Configuration Instructions
         </h4>
-        {onboardingData.event === "push" && (
-          <p className="text-sm text-muted-foreground">
-            Deployment will be triggered automatically when code is pushed to the{" "}
-            <span className="font-medium">{onboardingData.branch || "selected"}</span> branch. This is ideal for
-            continuous deployment workflows.
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            <strong>Multiple triggers:</strong> Your deployment can be triggered
+            by multiple events. For example, you can deploy on both pushes and
+            releases.
           </p>
-        )}
-        {onboardingData.event === "pull_request" && (
-          <p className="text-sm text-muted-foreground">
-            Deployment will be triggered when a pull request is opened, updated, or merged to the{" "}
-            <span className="font-medium">{onboardingData.branch || "selected"}</span> branch. This is useful for
-            preview deployments.
+          <p>
+            <strong>Branch filtering:</strong> Events will only trigger
+            deployments for the branch you specified in the previous step (
+            {onboardingData.branch || "your selected branch"}).
           </p>
-        )}
-        {onboardingData.event === "release" && (
-          <p className="text-sm text-muted-foreground">
-            Deployment will be triggered when a new release is created in your repository. This is recommended for
-            production deployments with versioning.
+          <p>
+            <strong>Webhook setup:</strong> We'll automatically configure the
+            necessary GitHub webhooks for your selected triggers.
           </p>
-        )}
+        </div>
       </div>
 
       <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 text-blue-800 dark:text-blue-300">
         <Info className="h-4 w-4" />
         <AlertDescription>
-          A GitHub webhook will be created to trigger deployments automatically when the selected event occurs.
+          You must select at least one trigger event. GitHub webhooks will be
+          created automatically for your selected events.
         </AlertDescription>
       </Alert>
     </div>
-  )
+  );
 }
-

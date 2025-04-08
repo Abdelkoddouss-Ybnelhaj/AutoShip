@@ -11,6 +11,7 @@ import {
   nextStep,
   prevStep,
   goToStep,
+  toggleEvent,
 } from "@/store/slice/onboardingSlice";
 import { sendOnboardingData, generateSSHKey } from "@/api/backend";
 
@@ -21,8 +22,15 @@ export function useOnboarding() {
   const isSubmitting = useAppSelector(selectIsSubmitting);
   const isSubmitted = useAppSelector(selectIsSubmitted);
 
-  const updateOnboardingData = (field: keyof typeof onboardingData, value: any) => {
+  const updateOnboardingData = (
+    field: keyof typeof onboardingData,
+    value: any
+  ) => {
     dispatch(setField({ field, value }));
+  };
+
+  const toggleTriggerEvent = (event: string) => {
+    dispatch(toggleEvent(event));
   };
 
   const submitData = async () => {
@@ -30,7 +38,7 @@ export function useOnboarding() {
     try {
       await sendOnboardingData(onboardingData);
       dispatch(submissionSuccess());
-      dispatch(goToStep(6)); // Move to success step
+      dispatch(goToStep(7)); // Move to success step
       return true;
     } catch (error) {
       console.error("Onboarding submission failed", error);
@@ -50,7 +58,7 @@ export function useOnboarding() {
   const generateNewSSHKey = async () => {
     try {
       const key = await generateSSHKey();
-      updateOnboardingData("sshPublicKey", key);
+      updateOnboardingData("sshPrivateKey", key);
       return key;
     } catch (error) {
       console.error("Failed to generate SSH key:", error);
@@ -64,6 +72,7 @@ export function useOnboarding() {
     isSubmitting,
     isSubmitted,
     updateOnboardingData,
+    toggleTriggerEvent,
     submitData,
     handleNext,
     handleBack,

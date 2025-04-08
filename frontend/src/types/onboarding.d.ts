@@ -3,12 +3,12 @@
 export interface OnboardingData {
   repository: string;
   branch: string;
-  event: string;
+  events: string[]; // Changed from event to events array
   serverIP: string;
   sshPrivateKey: string;
-  sshPublicKey: string;
   dockerUsername: string;
   dockerPassword: string;
+  dockerRegistry: string; // Added Docker registry
   serverUsername: string;
   useDockerCompose: boolean;
   runningCommand: string;
