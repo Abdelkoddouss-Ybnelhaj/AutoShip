@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* Define theme variables for Tailwind to generate utilities */
+@theme {
+  --color-green-600: #16a34a; /* Primary green */
+  --color-yellow-600: #ca8a04; /* Primary yellow */
+  --color-red-600: #dc2626; /* Primary red */
+
+  --color-green-300: #86efac; /* Lighter green */
+  --color-yellow-300: #fde68a; /* Lighter yellow */
+  --color-red-300: #fca5a5; /* Lighter red */
+
+  --color-green-50: #f0fdf4; /* Very light green */
+  --color-yellow-50: #fefce8; /* Very light yellow */
+  --color-red-50: #fef2f2; /* Very light red */
+
+  --color-green-800: #166534; /* Darker green */
+  --color-yellow-800: #854d0e; /* Darker yellow */
+  --color-red-800: #991b1b; /* Darker red */
+
+  /* Custom colors */
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-ring: hsl(222.2 84% 4.9%);
+  --color-input: hsl(214.3 31.8% 91.4%);
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(222.2 84% 4.9%);
+}
+
+/* Base styles */
+@layer base {
+  :root {
+    --background: hsl(var(--color-background));
+    --foreground: hsl(var(--color-foreground));
+
+    --card: hsl(var(--color-background));
+    --card-foreground: hsl(var(--color-foreground));
+
+    --primary: hsl(var(--color-green-600));
+    --primary-foreground: hsl(var(--color-background));
+
+    --secondary: hsl(var(--color-yellow-600));
+    --secondary-foreground: hsl(var(--color-background));
+
+    --muted: hsl(var(--color-red-600));
+    --muted-foreground: hsl(var(--color-green-50));
+
+    --destructive: hsl(var(--color-red-600));
+    --destructive-foreground: hsl(var(--color-background));
+
+    --border: hsl(var(--color-border));
+    --input: hsl(var(--color-input));
+    --ring: hsl(var(--color-ring));
+
+    --radius: 0.5rem;
+  }
+
+  /* Light and dark mode overrides */
+  .dark {
+    --background: hsl(var(--color-green-800));
+    --foreground: hsl(var(--color-background));
+
+    --primary: hsl(var(--color-green-50));
+    --primary-foreground: hsl(var(--color-green-800));
+  }
+}
+
+/* Apply Tailwind utilities */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar styles */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--color-muted-foreground) / 0.3);
+    border-radius: 20px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--color-muted-foreground) / 0.5);
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+/* Animation utilities */
+@layer utilities {
+  .animate-in {
+    animation-duration: 150ms;
+    animation-timing-function: cubic-bezier(0.1, 0.9, 0.2, 1);
+    animation-fill-mode: forwards;
+  }
+}
+
+/* Dashboard specific styles */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+/* Status badge colors */
+.status-badge-success {
+  @apply text-green-600 border-green-300 bg-green-50 dark:bg-green-950/30 dark:border-green-800;
+}
+
+.status-badge-pending {
+  @apply text-yellow-600 border-yellow-300 bg-yellow-50 dark:bg-yellow-950/30 dark:border-yellow-800;
+}
+
+.status-badge-error {
+  @apply text-red-600 border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-800;
+}
+
+/* Sidebar specific styles */
+.sidebar-content {
+  @apply flex min-h-0 flex-1 flex-col gap-2 overflow-auto scrollbar-thin;
+}
+
+/* Transition utilities */
+.transition-all-200 {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-transform-200 {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-opacity-200 {
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
+/* Code block styles */
+pre {
+  @apply p-4 rounded-lg bg-muted overflow-x-auto;
+}
+
+code {
+  @apply font-mono text-sm;
+}
+
+/* Table styles */
+.table-container {
+  @apply w-full overflow-auto;
+}
+
+.table-container table {
+  @apply w-full border-collapse;
+}
+
+.table-container th {
+  @apply text-left p-3 bg-muted font-medium text-muted-foreground;
+}
+
+.table-container td {
+  @apply p-3 border-t border-border;
+}
+
+/* Form styles */
+.form-group {
+  @apply space-y-2 mb-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium;
+}
+
+.form-hint {
+  @apply text-xs text-muted-foreground mt-1;
+}
+
+.form-error {
+  @apply text-sm text-destructive mt-1;
+}
