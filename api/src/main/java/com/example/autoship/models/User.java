@@ -4,11 +4,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -35,8 +38,13 @@ public class User implements UserDetails {
 
     private String imgUrl;
 
-    @Column(nullable = false, updatable = false)
-    private Timestamp created_at;
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     public User(Long gitHubID, String full_name, String email,String img_url, Role role) {
         this.gitHubID = gitHubID;
@@ -44,7 +52,6 @@ public class User implements UserDetails {
         this.email = email;
         this.imgUrl = img_url;
         this.role = role;
-        this.created_at = new Timestamp(System.currentTimeMillis());
     }
 
     @Override
