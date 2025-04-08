@@ -2,6 +2,7 @@ package com.example.autoship.config;
 
 import java.io.IOException;
 
+import com.example.autoship.exceptions.InvalidJwtException;
 import com.example.autoship.services.JwtService;
 import com.example.autoship.services.UserService;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +22,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 
+import static com.example.autoship.common.MessageKeys.ERROR_JWT_INVALID_TOKEN;
+
 @Component
 @AllArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -39,28 +42,42 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         final String jwt;
         final String subject;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        jwt = authHeader.substring(7);
-        subject = jwtService.extractSubject(jwt);
-
-        if (StringUtils.isNotEmpty(subject) &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService.userDetailsService().loadUserByUsername(subject);
-
-            if (jwtService.isTokenValid(jwt, subject)) {
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userDetails, null,
-                        userDetails.getAuthorities());
-                token.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                securityContext.setAuthentication(token);
-                SecurityContextHolder.setContext(securityContext);
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                filterChain.doFilter(request, response);
+                return;
             }
+
+            jwt = authHeader.substring(7);
+            subject = jwtService.extractSubject(jwt);
+
+            if (StringUtils.isNotEmpty(subject) &&
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userService.userDetailsService().loadUserByUsername(subject);
+
+                if (jwtService.isTokenValid(jwt, subject)) {
+                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                    UsernamePasswordAuthenticationToken token =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    token.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    securityContext.setAuthentication(token);
+                    SecurityContextHolder.setContext(securityContext);
+                }
+            }
+
+            filterChain.doFilter(request, response);
+
+        } catch (Exception e) {
+            handleInvalidJwt(response);
         }
-        filterChain.doFilter(request, response);
     }
+
+    private void handleInvalidJwt(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write(
+                String.format("{\"error\": \"%s\"}", ERROR_JWT_INVALID_TOKEN)
+        );
+    }
+
 }
