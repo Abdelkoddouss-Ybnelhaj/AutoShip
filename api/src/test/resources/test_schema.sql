@@ -10,6 +10,16 @@ CREATE TABLE environments (
     updated_at TIMESTAMP(6)
 );
 
+CREATE TABLE deployments (
+    dep_id BIGINT NOT NULL PRIMARY KEY,
+    listenerID BIGINT,
+    cmd VARCHAR(255) NOT NULL,
+    status VARCHAR(255),
+    logs TEXT,
+    created_at TIMESTAMP(6),
+    updated_at TIMESTAMP(6)
+);
+
 
 CREATE TABLE builds (
     build_id BIGINT NOT NULL PRIMARY KEY,
