@@ -21,7 +21,7 @@ public class WebConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin(clientUrl);
+        config.addAllowedOriginPattern(clientUrl);
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setMaxAge(3600L);
