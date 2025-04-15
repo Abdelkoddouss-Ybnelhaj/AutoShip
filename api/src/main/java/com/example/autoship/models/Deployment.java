@@ -36,6 +36,9 @@ public class Deployment {
     @OneToMany(mappedBy = "deployment")
     private List<Build> builds;
 
+    @Column(name = "logs",columnDefinition = "TEXT")
+    private String logs;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

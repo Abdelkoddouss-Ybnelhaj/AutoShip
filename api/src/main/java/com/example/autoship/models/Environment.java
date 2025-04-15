@@ -2,6 +2,7 @@ package com.example.autoship.models;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "environments")
 @Getter
 @Setter
+@NoArgsConstructor
 public class Environment {
 
     @Id
@@ -22,8 +24,9 @@ public class Environment {
     @Column(nullable = false,name = "user_id")
     private Long userID;
 
-    @Column(nullable = false, name = "repo_id")
-    private Long repoID;
+    @ManyToOne
+    @JoinColumn(name = "repo_id")
+    private Project project;
 
     @Column(nullable = false, name = "server_ip")
     private String serverIP;
@@ -31,7 +34,7 @@ public class Environment {
     @Column(nullable = false, name = "username")
     private String username;
 
-    @Column(nullable = false, name = "sshKey")
+    @Column(nullable = false, name = "sshKey", columnDefinition = "TEXT")
     private String sshKey;
 
     @CreationTimestamp
@@ -42,9 +45,9 @@ public class Environment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Environment(Long userID, Long repoID, String serverIP, String username, String sshKey) {
+    public Environment(Long userID, Project project, String serverIP, String username, String sshKey) {
         this.userID = userID;
-        this.repoID = repoID;
+        this.project = project;
         this.serverIP = serverIP;
         this.username = username;
         this.sshKey = sshKey;
