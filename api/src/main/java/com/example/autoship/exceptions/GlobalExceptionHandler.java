@@ -38,6 +38,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleGlobalException(Exception ex) {
-        return responseBuilder.buildResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage());
+        return responseBuilder.buildResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), ERROR_UNEXPECTED_ERROR);
     }
 }
