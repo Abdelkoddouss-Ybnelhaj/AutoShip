@@ -34,4 +34,7 @@ public class DeploymentController {
         projectService.configDeployment(request,jwtToken);
         return responseBuilder.buildResponse(HttpStatus.CREATED.value(), INFO_DEPLOYMENT_CONFIGURATION);
     }
+
+
+
 }
