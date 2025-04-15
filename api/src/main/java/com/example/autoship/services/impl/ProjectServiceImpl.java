@@ -25,68 +25,79 @@ public class ProjectServiceImpl implements ProjectService {
     private final WebhookListenerRepository webhookListenerRepository;
     private final EventRepository eventRepository;
     private final DockerCredRepository credRepository;
+    private final DeploymentInfosRepository deploymentInfosRepository;
 
     @Override
     public void configDeployment(DeploymentConfigDTO request, String token) throws Exception {
-        log.info("Starting deployment configuration for repository: {}", request.getRepo_name());
 
         String accessToken = jwtService.extractKey(token, "access-token");
         String login = jwtService.extractKey(token, "login");
         String userId = jwtService.extractKey(token, "sub");
 
+        log.info("User: {} - Starting deployment configuration for repository: {}", login, request.getRepo_name());
+
         // Step 1: Create webhook
-        log.debug("Creating webhook for repo: {} by user: {}", request.getRepo_name(), login);
+        log.debug("User: {} - Creating webhook for repo: {}", login, request.getRepo_name());
         String webhookId = gitService.createWebhook(login, request.getRepo_name(), "webhook-secret", accessToken);
-        log.info("Webhook created successfully for repo: {} with ID: {}", request.getRepo_name(), webhookId);
+        log.info("User: {} - Webhook created successfully for repo: {} with ID: {}", login, request.getRepo_name(), webhookId);
+
+        Object githubRepoID = gitService.getRepoInfos(login, request.getRepo_name()).get("id");
+        log.info("User: {} - RepoID successfully retrieved for repo: {}", login, request.getRepo_name());
 
         try {
+            // Step 1: Save docker credentials
+            log.debug("User: {} - Saving Docker credentials", login);
+            DockerCredentials dockerCredentials = new DockerCredentials(
+                    Long.valueOf(userId),
+                    request.getDocker_username(),
+                    request.getDocker_password()
+            );
+            credRepository.save(dockerCredentials);
+            log.info("User: {} - Docker credentials saved successfully", login);
 
             // Step 2: Save project info
             log.debug("Saving project information for repo: {} and user: {}", request.getRepo_name(), login);
-            Project project = new Project(Long.valueOf(userId), request.getRepo_name());
+            Project project = new Project(Long.valueOf(githubRepoID.toString()), Long.valueOf(githubRepoID.toString()), dockerCredentials, request.getRepo_name());
             Project savedProject = projectRepository.save(project);
             log.info("Project saved with repo ID: {}", savedProject.getRepoID());
 
             // Step 3: Save server info
-            log.debug("Saving server information for user: {} and project ID: {}", login, savedProject.getRepoID());
+            log.debug("User: {} - Saving server information for project ID: {}", login, savedProject.getRepoID());
             Environment environment = new Environment(
                     Long.valueOf(userId),
-                    savedProject.getRepoID(),
+                    savedProject,
                     request.getServerIP(),
-                    passwordEncoder.encode(request.getUsername()),
-                    passwordEncoder.encode(request.getSshKey())
+                    request.getUsername(),
+                    request.getSshKey()
             );
+
             envRepository.save(environment);
-            log.info("Server information saved for project: {} and user: {}", savedProject.getRepoID(), login);
+            log.info("User: {} - Server information saved for project: {}", login, savedProject.getRepoID());
 
             // Step 4: Save webhook listener info
-            log.debug("Saving webhook listener for project: {} and branch: {} for user {}", savedProject.getRepoID(), request.getBranch(),login);
-            WebhookListener listener = new WebhookListener(savedProject.getRepoID(), request.getBranch(), "webhook-secret");
+            log.debug("User: {} - Saving webhook listener for project: {} and branch: {}", login, savedProject.getRepoID(), request.getBranch());
+            WebhookListener listener = new WebhookListener(savedProject, request.getBranch(), "webhook-secret");
             WebhookListener savedListener = webhookListenerRepository.save(listener);
-            log.info("Webhook listener saved with listener ID: {}", savedListener.getListenerID());
+            log.info("User: {} - Webhook listener saved with listener ID: {}", login, savedListener.getListenerID());
+
+            // Save Deployment Infos
+            DeploymentInfos deploymentInfos = new DeploymentInfos(savedListener, request.getCmd(), request.getDocker_repo_name());
+            deploymentInfosRepository.save(deploymentInfos);
+            log.info("User: {} - Deployment Infos saved with cmd={} and docker_repo_name={}", login, request.getCmd(), request.getDocker_repo_name());
 
             // Step 5: Save events
-            log.debug("Saving events for listener ID: {}", savedListener.getListenerID());
+            log.debug("User: {} - Saving events for listener ID: {}", login, savedListener.getListenerID());
             for (String event : request.getEvents()) {
                 Event eventEntity = new Event(savedListener.getListenerID(), event);
                 eventRepository.save(eventEntity);
-                log.info("Event saved: {}", event);
+                log.info("User: {} - Event saved for listener ID:{}", login, savedListener.getListenerID());
             }
 
-            // Step 6: Save docker credentials
-            log.debug("Saving Docker credentials for user: {}", login);
-            DockerCredentials dockerCredentials = new DockerCredentials(
-                    passwordEncoder.encode(request.getDocker_username()),
-                    passwordEncoder.encode(request.getDocker_password())
-            );
-            credRepository.save(dockerCredentials);
-            log.info("Docker credentials saved for user: {}", login);
-
         } catch (Exception e) {
-            log.error("Error occurred during deployment configuration: {}", e.getMessage(), e);
+            log.error("User: {} - Error occurred during deployment configuration: {}", login, e.getMessage());
             throw new Exception("Deployment configuration failed", e);
         }
 
-        log.info("Deployment configuration completed successfully.");
+        log.info("User: {} - Deployment configuration completed successfully.", login);
     }
 }

@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EnvironmentRepository extends JpaRepository<Environment,Long> {
 
+    Environment findOneByProject_RepoID(Long repoID);
+
 }

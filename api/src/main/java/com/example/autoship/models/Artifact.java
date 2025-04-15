@@ -10,19 +10,20 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "events")
+@Table(name = "artifacts")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Event {
+public class Artifact {
 
     @Id
     @GeneratedValue
-    @Column(nullable = false, name = "event_Id")
-    private Long eventID;
+    @Column(nullable = false, name = "id")
+    private Long id;
 
-    @Column(nullable = false, name = "listener_id")
-    private Long listenerID;
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "build_id")
+    private Build build;
 
     @Column(nullable = false, name = "name")
     private String name;
@@ -35,8 +36,8 @@ public class Event {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Event(Long listenerID, String name) {
-        this.listenerID = listenerID;
+    public Artifact(Build build, String name) {
+        this.build = build;
         this.name = name;
     }
 }

@@ -38,4 +38,10 @@ public class DeploymentConfigDTO {
     @NotBlank(message = "Docker password is required")
     private String docker_password;
 
+    @NotBlank(message = "Docker repository name is required")
+    private String docker_repo_name;
+
+    @NotBlank(message = "Deploying cmd is required")
+    private String cmd;
+
 }

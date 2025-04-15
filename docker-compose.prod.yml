@@ -14,7 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   api:
-    image: abdo001/autoship:backv1.1
+    image: abdo001/autoship:backv1.3
     ports:
       - "8080:8080"
     environment:
@@ -24,7 +24,7 @@ services:
       - GITHUB-CLIENT-ID=
       - GITHUB-CLIENT-SECRET=
       - CLIENT-URL=http://localhost:5321
-      - WEBHOOK-URL=https://aserti.com/webhook
+      - WEBHOOK-URL=
     container_name: api-backend
     depends_on:
       - postgres-db

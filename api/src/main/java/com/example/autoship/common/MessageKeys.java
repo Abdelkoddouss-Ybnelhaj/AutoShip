@@ -12,6 +12,7 @@ public final class MessageKeys {
     public static final String INFO_DEPLOYMENT_CONFIGURATION = "Successfully Configure Deployment";
 
     // exception messages
+    public static final String ERROR_UNEXPECTED_ERROR = "Unexpected Error occurred !";
     public static final String ERROR_HOOK_EXIST = "Hook already exists on this repository";
     public static final String ERROR_REPO_NOT_FOUND = "User repo not found";
     public static final String ERROR_DEPLOYMENT_CONFIGURATION = "Deployment configuration failed!";

@@ -22,8 +22,13 @@ services:
       - SPRING_DATASOURCE_PASSWORD=admin
       - GITHUB-CLIENT-ID=
       - GITHUB-CLIENT-SECRET=
-      - CLIENT-URL=http://localhost:5321
-      - WEBHOOK-URL=https://aserti.com/webhook
+      - CLIENT-URL=http://localhost:3000
+      - WEBHOOK-URL=
     container_name: api-backend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.m2:/root/.m2
+      - ./scripts/:/scripts
+    privileged: true
     depends_on:
       - postgres-db

@@ -11,19 +11,22 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "repositories")
+@Table(name = "projects")
 @Getter
 @Setter
 @NoArgsConstructor
 public class Project {
 
     @Id
-    @GeneratedValue
     @Column(nullable = false,name = "repo_id")
     private Long repoID;
 
     @Column(nullable = false,name = "user_id")
     private Long userID;
+
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "cred_id")
+    private DockerCredentials dockerCredentials;
 
     @Column(nullable = false,name = "repo_name")
     private String repoName;
@@ -36,8 +39,10 @@ public class Project {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Project(Long gitHubID, String repoName) {
+    public Project(Long repoID,Long gitHubID,DockerCredentials dockerCredentials, String repoName) {
+        this.repoID = repoID;
         this.userID = gitHubID;
+        this.dockerCredentials = dockerCredentials;
         this.repoName = repoName;
     }
 }
