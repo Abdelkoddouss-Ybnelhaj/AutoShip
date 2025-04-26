@@ -33,9 +33,9 @@ public class BuildRepositoryTest {
         DockerCredentials credentials = new DockerCredentials(2L,"abdo","passwd");
         Project project = new Project(145L,2L, credentials, "Repo");
 
-        WebhookListener listener = new WebhookListener(project,"main","web-secret");
-        Deployment deployment = new Deployment(listener,"cmd",StatusType.SUCCESSED);
-        Deployment deployment2 = new Deployment(listener,"cmd",StatusType.SUCCESSED);
+        WebhookListener listener = new WebhookListener(1L,project,"main","web-secret");
+        Deployment deployment = new Deployment(listener,"cmd",StatusType.SUCCESSED,"push","commit");
+        Deployment deployment2 = new Deployment(listener,"cmd",StatusType.SUCCESSED,"push","commit");
         Build build = new Build(deployment,StatusType.SUCCESSED,"logs");
         Build build2 = new Build(deployment,StatusType.SUCCESSED,"logs");
         Build build3 = new Build(deployment2,StatusType.SUCCESSED,"logs");
