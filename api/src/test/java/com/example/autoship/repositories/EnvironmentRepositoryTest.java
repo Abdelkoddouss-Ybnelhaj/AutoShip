@@ -1,7 +1,6 @@
 package com.example.autoship.repositories;
 
 import com.example.autoship.models.Environment;
-import com.example.autoship.models.Project;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,20 +14,29 @@ public class EnvironmentRepositoryTest {
     @Autowired
     private EnvironmentRepository environmentRepository;
 
-    @Autowired
-    private ProjectRepository projectRepository;
-
     @BeforeEach
     void setup(){
-        Project project = new Project(145L,2L, null, "Repo");
-        var savedProject = projectRepository.save(project);
-        Environment environment = new Environment(14L,savedProject,"serverIP","username","sshKey");
+        Environment environment = new Environment(2L,"IP add","server1","user","key");
+        Environment environment2 = new Environment(3L,"IP add2","server2","user2","key");
         environmentRepository.save(environment);
+        environmentRepository.save(environment2);
     }
 
     @Test
-    void test_GetEnvironmentByProject_RepoID(){
-        var result = environmentRepository.findOneByProject_RepoID(145L);
+    void test_findEnvByUser(){
+        var result = environmentRepository.findEnvByUser(2L);
         assertThat(result).isNotNull();
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    @Test
+    void test_findEnvByUserAndId(){
+        Environment environment = new Environment(2L,"IP add3","server2","user","key");
+        var savedEnv = environmentRepository.save(environment);
+
+        var result = environmentRepository.findEnvByUserANDId(2L,savedEnv.getEnvID());
+        assertThat(result).isNotNull();
+        assertThat(result.getServerIP()).isEqualTo("IP add3");
+        assertThat(result.getServerName()).isEqualTo("server2");
     }
 }

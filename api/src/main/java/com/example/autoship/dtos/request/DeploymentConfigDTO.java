@@ -1,9 +1,10 @@
-package com.example.autoship.dtos;
+package com.example.autoship.dtos.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
+import lombok.NonNull;
 
 import java.util.List;
 
@@ -11,9 +12,11 @@ import java.util.List;
 public class DeploymentConfigDTO {
 
     @NotBlank(message = "Repository name is required")
+    @NonNull
     private String repo_name;
 
     @NotBlank(message = "Branch name is required")
+    @NonNull
     private String branch;
 
     @NotEmpty(message = "At least one event must be specified")
@@ -27,21 +30,31 @@ public class DeploymentConfigDTO {
     private String serverIP;
 
     @NotBlank(message = "Username is required")
+    @NonNull
+    private String serverName;
+
+    @NotBlank(message = "Username is required")
+    @NonNull
     private String username;
 
     @NotBlank(message = "Private key is required")
+    @NonNull
     private String sshKey;
 
     @NotBlank(message = "Docker username is required")
+    @NonNull
     private String docker_username;
 
     @NotBlank(message = "Docker password is required")
+    @NonNull
     private String docker_password;
 
     @NotBlank(message = "Docker repository name is required")
+    @NonNull
     private String docker_repo_name;
 
     @NotBlank(message = "Deploying cmd is required")
+    @NonNull
     private String cmd;
 
 }

@@ -36,4 +36,6 @@ public class ProjectRepositoryTest {
         assertThat(result).isNotNull();
         assertThat(result.get().getDockerCredentials().getUsername()).isEqualTo("abdo");
     }
+
+
 }

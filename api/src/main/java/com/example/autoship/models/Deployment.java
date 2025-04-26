@@ -22,7 +22,7 @@ public class Deployment {
     @Column(nullable = false, name = "dep_id")
     private Long depID;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name = "listenerID")
     private WebhookListener webhookListener;
 
@@ -33,7 +33,13 @@ public class Deployment {
     @Enumerated(EnumType.STRING)
     private StatusType status;
 
-    @OneToMany(mappedBy = "deployment")
+    @Column(nullable = false, name = "event")
+    private String event;
+
+    @Column(name = "commit")
+    private String commit;
+
+    @OneToMany(mappedBy = "deployment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Build> builds;
 
     @Column(name = "logs",columnDefinition = "TEXT")
@@ -47,14 +53,18 @@ public class Deployment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Deployment(WebhookListener webhookListener, String cmd, StatusType status) {
+    public Deployment(WebhookListener webhookListener, String cmd, StatusType status,String event,String commit) {
         this.webhookListener = webhookListener;
         this.cmd = cmd;
         this.status = status;
+        this.event = event;
+        this.commit = commit;
     }
 
-    public Deployment(WebhookListener webhookListener, String cmd) {
+    public Deployment(WebhookListener webhookListener, String cmd,String event,String commit) {
         this.webhookListener = webhookListener;
         this.cmd = cmd;
+        this.event = event;
+        this.commit = commit;
     }
 }

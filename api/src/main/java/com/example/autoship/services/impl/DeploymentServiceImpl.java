@@ -1,7 +1,13 @@
 package com.example.autoship.services.impl;
 
 import com.example.autoship.dtos.BuildResult;
+import com.example.autoship.dtos.response.DepDetailsDTO;
+import com.example.autoship.dtos.response.DeploymentConfigDTO;
+import com.example.autoship.dtos.response.DeploymentDTO;
 import com.example.autoship.exceptions.BuildFailedException;
+import com.example.autoship.exceptions.DeploymentNotFoundException;
+import com.example.autoship.exceptions.ListenerNotFoundException;
+import com.example.autoship.mapper.DeploymentMapper;
 import com.example.autoship.models.*;
 import com.example.autoship.repositories.*;
 import com.example.autoship.services.*;
@@ -11,9 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @AllArgsConstructor
@@ -28,7 +33,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     private final WebhookListenerRepository webhookListenerRepository;
     private final DeploymentInfosRepository deploymentInfosRepository;
     private final DeploymentRepository deploymentRepository;
-    private final EnvironmentRepository environmentRepository;
+    private final JwtService jwtService;
 
     @Override
     public void startDeployment(String eventType, Map<String, Object> payload) {
@@ -45,39 +50,50 @@ public class DeploymentServiceImpl implements DeploymentService {
 
         try {
             Map<String, Object> payloadInfos = extractPayloadInfo(payload);
-            gitService.cloneRepo(payloadInfos);
 
             destination = payloadInfos.get("destination");
             Object repoID = payloadInfos.get("repoID");
             Object branch = payloadInfos.get("branch");
+            Object commit = payloadInfos.get("commit");
 
             if (destination == null || repoID == null || branch == null) {
                 log.error("[Deployment] Missing critical deployment info: destination={}, repoID={}, branch={}.", destination, repoID, branch);
                 return;
             }
 
+            // verify if the change was made within the appropriate branch
             WebhookListener listener = webhookListenerRepository.findOneByProject_RepoIDAndBranch(Long.valueOf(repoID.toString()), branch.toString());
+            if (listener == null) {
+                throw new ListenerNotFoundException("Listener not found for repoID=" + repoID + " and branch=" + branch);
+            }
+
+            // start cloning the repo
+            gitService.cloneRepo(payloadInfos);
             DeploymentInfos deploymentInfos = deploymentInfosRepository.findOneByWebhookListener_ListenerID(listener.getListenerID());
 
-            deployment = new Deployment(listener, deploymentInfos.getCmd());
-            log.info("[Deployment] Deployment object created for repoID={}", repoID);
+            deployment = new Deployment(listener, deploymentInfos.getCmd(), eventType,commit.toString());
+            log.info("[Deployment] Deployment object created for repoID={} with event={}", repoID, eventType);
 
             BuildResult buildResult = dockerService.build_pushDockerImages(
-                    deployment, destination.toString(), Long.valueOf(repoID.toString()), branch.toString(), deploymentInfos.getDocker_repo()
+                    deploymentRepository.save(deployment), destination.toString(), Long.valueOf(repoID.toString()), branch.toString(), deploymentInfos.getDocker_repo()
             );
 
             if (buildResult.getExistCode() != 0) {
                 throw new BuildFailedException("Build process failed with exit code " + buildResult.getExistCode());
             }
 
-            Environment environment = environmentRepository.findOneByProject_RepoID(Long.valueOf(repoID.toString()));
+            Environment environment = deploymentInfosRepository.findOneByWebhookListener_ListenerID(listener.getListenerID()).getEnvironment();
             keyPath = storeSshKey(environment.getSshKey(), repoID.toString());
 
-            String image = buildResult.getArtifacts().getFirst().split("-")[0];
-            String containerName = image.split(":")[1];
+            // Extract the image tag ex: abdo001/meta-cal:MetaCal-1
+            String tag = buildResult.getArtifacts().getFirst().split(":")[1]; // MetaCal-1
+            String containerName = tag.split("-")[0]; // MetaCal
+            String image = deploymentInfos.getDocker_repo() + ":" + containerName; // abdo001/meta-cal:MetaCal
             deployApplication(environment, keyPath, deploymentInfos.getCmd(), containerName, image, logs);
 
             deployment.setStatus(StatusType.SUCCESSED);
+            deployment.setLogs(logs.toString());
+            deploymentRepository.save(deployment);
             log.info("[Deployment] Deployment completed successfully for repoID={}", repoID);
 
         } catch (Exception e) {
@@ -94,16 +110,57 @@ public class DeploymentServiceImpl implements DeploymentService {
         }
     }
 
+    @Override
+    public List<DeploymentDTO> getAllDeployments(String token) {
+        String userId = jwtService.extractKey(token, "sub");
+        log.info("User {} - Fetching all deployments for user", userId);
+
+        return deploymentRepository.getAllDeploymentsForUser(Long.valueOf(userId));
+    }
+
+    @Override
+    public DepDetailsDTO getDepDetails(String token, Long depID) throws DeploymentNotFoundException {
+        String userId = jwtService.extractKey(token, "sub");
+        log.info("User {} - Fetching deployment details for user", userId);
+
+        var result = deploymentRepository.getDeploymentDetailsForUser(Long.valueOf(userId), depID);
+        if (result == null || result.isEmpty()) {
+            throw new DeploymentNotFoundException("Deployment not found with ID=" + depID);
+        }
+        return DeploymentMapper.mapToDepDetailsDTO(result);
+    }
+
+    @Override
+    public List<DeploymentConfigDTO> getDeploymentConfigs(String token) {
+        String userId = jwtService.extractKey(token, "sub");
+        log.info("User {} - Fetching all deployments configs for user", userId);
+
+        var result = deploymentRepository.getAllDeploymentConfigsForUser(Long.valueOf(userId));
+        return DeploymentMapper.mapToDeploymentConfigDTOs(result);
+    }
+
+    @Override
+    public DeploymentConfigDTO getDeploymentConfig(String token, Long listenerID) {
+        String userId = jwtService.extractKey(token, "sub");
+        log.info("User {} - Fetching deployment config with listenerID={}", userId,listenerID);
+
+        var result = deploymentRepository.getAllDeploymentConfigForUser(Long.valueOf(userId),listenerID);
+        return DeploymentMapper.mapToDeploymentConfigDTO(result);
+    }
+
     private Map<String, Object> extractPayloadInfo(Map<String, Object> payload) {
         Map<String, Object> infos = new HashMap<>();
         String branch = ((String) payload.get("ref")).split("/")[2];
+        String commit = (String) payload.get("after");
         Map repository = (Map) payload.get("repository");
 
         Object repoID = repository.get("id");
         String full_name = (String) repository.get("full_name");
         String clone_url = (String) repository.get("clone_url");
 
+
         infos.put("branch", branch);
+        infos.put("commit", commit);
         infos.put("repoID", Long.valueOf(repoID.toString()));
         infos.put("clone_url", clone_url);
         infos.put("destination", DESTINATION_DIR + "/" + full_name);
@@ -127,7 +184,7 @@ public class DeploymentServiceImpl implements DeploymentService {
         return tempKeyFile.getAbsolutePath();
     }
 
-    private void deployApplication(Environment env, String keyPath, String cmd, String containerName,String image, StringBuilder logs) throws IOException, InterruptedException {
+    private void deployApplication(Environment env, String keyPath, String cmd, String containerName, String image, StringBuilder logs) throws IOException, InterruptedException {
         copyDeploymentScriptToRemote(env, keyPath, logs);
 
         String deployCommand = String.format(
@@ -172,12 +229,4 @@ public class DeploymentServiceImpl implements DeploymentService {
         }
     }
 
-    public static String extractImageName(String image) {
-        Pattern pattern = Pattern.compile(":(\\w+)-");
-        Matcher matcher = pattern.matcher(image);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return null;
-    }
 }

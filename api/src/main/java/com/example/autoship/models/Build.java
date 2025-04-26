@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "builds")
@@ -22,7 +23,7 @@ public class Build {
     @Column(nullable = false, name = "build_id")
     private Long buildID;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name = "dep_id")
     private Deployment deployment;
 
@@ -32,6 +33,9 @@ public class Build {
 
     @Column(nullable = false, name = "logs",columnDefinition = "TEXT")
     private String logs;
+
+    @OneToMany(mappedBy = "build", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Artifact> artifacts;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -46,4 +50,5 @@ public class Build {
         this.status = status;
         this.logs = logs;
     }
+
 }

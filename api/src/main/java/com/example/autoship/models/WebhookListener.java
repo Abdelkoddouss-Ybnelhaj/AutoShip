@@ -19,11 +19,10 @@ import java.util.List;
 public class WebhookListener {
 
     @Id
-    @GeneratedValue
     @Column(nullable = false, name = "listener_id")
     private Long listenerID;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "repo_id")
     private Project project;
 
@@ -33,8 +32,11 @@ public class WebhookListener {
     @Column(nullable = false, name = "webhook_secret")
     private String webhook_secret;
 
-    @OneToMany(mappedBy = "webhookListener")
-    private List<Deployment> deployments ;
+    @OneToOne(mappedBy = "webhookListener", cascade = CascadeType.ALL, orphanRemoval = true)
+    private DeploymentInfos deploymentInfos;
+
+    @OneToMany(mappedBy = "webhookListener", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Deployment> deployments;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -44,7 +46,8 @@ public class WebhookListener {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public WebhookListener(Project project, String branch, String webhook_secret) {
+    public WebhookListener(Long listenerID ,Project project, String branch, String webhook_secret) {
+        this.listenerID = listenerID;
         this.project = project;
         this.branch = branch;
         this.webhook_secret = webhook_secret;

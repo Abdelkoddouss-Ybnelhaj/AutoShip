@@ -20,7 +20,7 @@ public class WebhookListenerRepositoryTest {
     void setup(){
         DockerCredentials credentials = new DockerCredentials(2L,"abdo","passwd");
         Project project = new Project(145L,2L, credentials, "Repo");
-        WebhookListener webhookListener = new WebhookListener(project,"master","");
+        WebhookListener webhookListener = new WebhookListener(1L,project,"master","");
         webhookListenerRepository.save(webhookListener);
     }
 

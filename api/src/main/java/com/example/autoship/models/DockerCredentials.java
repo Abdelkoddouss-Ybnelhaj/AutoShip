@@ -26,7 +26,7 @@ public class DockerCredentials {
     @Column(nullable = false,name = "user_id")
     private Long userID;
 
-    @Column(nullable = false, name = "username")
+    @Column(nullable = false,unique = true, name = "username")
     private String username;
 
     @Column(nullable = false, name = "password")
