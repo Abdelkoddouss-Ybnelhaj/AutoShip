@@ -32,5 +32,5 @@ spring:
         jdbc:
           time_zone: UTC
 
-  webhook-url: https://840d-196-117-206-206.ngrok-free.app/webhook
+  webhook-url: https://958b-196-117-137-240.ngrok-free.app/webhook
   github-api: https://api.github.com
