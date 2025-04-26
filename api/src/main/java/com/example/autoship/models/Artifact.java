@@ -21,7 +21,7 @@ public class Artifact {
     @Column(nullable = false, name = "id")
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name = "build_id")
     private Build build;
 

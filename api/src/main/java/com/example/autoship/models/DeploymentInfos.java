@@ -22,9 +22,13 @@ public class DeploymentInfos {
     @Column(nullable = false, name = "id")
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @OneToOne
     @JoinColumn(name = "listenerID")
     private WebhookListener webhookListener;
+
+    @ManyToOne
+    @JoinColumn(name = "envID")
+    private Environment environment;
 
     @Column(nullable = false, name = "cmd")
     private String cmd;
@@ -40,9 +44,11 @@ public class DeploymentInfos {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public DeploymentInfos(WebhookListener webhookListener, String cmd, String docker_repo) {
+
+    public DeploymentInfos(WebhookListener webhookListener, String cmd, String docker_repo,Environment environment) {
         this.webhookListener = webhookListener;
         this.cmd = cmd;
         this.docker_repo = docker_repo;
+        this.environment = environment;
     }
 }

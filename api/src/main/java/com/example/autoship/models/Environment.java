@@ -24,17 +24,16 @@ public class Environment {
     @Column(nullable = false,name = "user_id")
     private Long userID;
 
-    @ManyToOne
-    @JoinColumn(name = "repo_id")
-    private Project project;
-
-    @Column(nullable = false, name = "server_ip")
+    @Column(nullable = false, unique = true, name = "server_ip")
     private String serverIP;
+
+    @Column(nullable = false, name = "server_name")
+    private String serverName;
 
     @Column(nullable = false, name = "username")
     private String username;
 
-    @Column(nullable = false, name = "sshKey", columnDefinition = "TEXT")
+    @Column(nullable = false, name = "ssh_key", columnDefinition = "TEXT")
     private String sshKey;
 
     @CreationTimestamp
@@ -45,10 +44,10 @@ public class Environment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Environment(Long userID, Project project, String serverIP, String username, String sshKey) {
+    public Environment(Long userID, String serverIP,String serverName, String username, String sshKey) {
         this.userID = userID;
-        this.project = project;
         this.serverIP = serverIP;
+        this.serverName = serverName;
         this.username = username;
         this.sshKey = sshKey;
     }
