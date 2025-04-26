@@ -6,6 +6,7 @@ import com.example.autoship.services.JwtService;
 import com.example.autoship.services.GitService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -33,7 +34,6 @@ public class GithubServiceImpl implements GitService {
         this.PAYLOAD_URL = PAYLOAD_URL;
         this.processBuilder = processBuilder;
     }
-
 
     @Override
     public List<String> getUserRepos(String token) throws GithubRequestException {
@@ -78,11 +78,11 @@ public class GithubServiceImpl implements GitService {
     }
 
     @Override
-    public String createWebhook(String owner, String repo, String secret, String accessToken) throws Exception {
+    public String createWebhook(String owner, String repo,List<String> events, String secret, String accessToken) throws Exception {
         log.info("User {} - Attempting to create a github Webhook", owner);
         String url = GITHUB_API + "/repos/" + owner + "/" + repo + "/hooks";
 
-        // Header
+        // Headers
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
         headers.set("Accept", "application/vnd.github+json");
@@ -97,7 +97,7 @@ public class GithubServiceImpl implements GitService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("name", "web");
         requestBody.put("active", true);
-        requestBody.put("events", List.of("push", "pull_request"));
+        requestBody.put("events", events);
         requestBody.put("config", config);
 
         // Request entity
@@ -125,7 +125,6 @@ public class GithubServiceImpl implements GitService {
         }
     }
 
-
     @Override
     public Map getRepoInfos(String owner, String repoName) throws Exception {
         try {
@@ -151,6 +150,42 @@ public class GithubServiceImpl implements GitService {
         } catch (Exception ex) {
             log.error("User {} - Unexpected error: {}", owner, ex.getMessage());
             throw new Exception(ex.getMessage());
+        }
+    }
+
+    @Override
+    public void deleteWebhook(String owner, String repo, Long hookID, String accessToken) throws GithubRequestException {
+        log.info("User {} - Attempting to delete GitHub Webhook ID={}", owner, hookID);
+
+        String url = String.format("%s/repos/%s/%s/hooks/%s", GITHUB_API, owner, repo, hookID);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        headers.setAccept(List.of(MediaType.valueOf("application/vnd.github+json")));
+
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+        RestTemplate restTemplate = new RestTemplate();
+
+        try {
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.DELETE,
+                    requestEntity,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
+                log.info("User {} - Webhook ID={} deleted successfully (HTTP 204)", owner, hookID);
+
+            } else {
+                log.warn("User {} - Webhook ID={} deletion returned status: {}", owner, hookID, response.getStatusCode());
+            }
+        } catch (HttpClientErrorException e) {
+            log.error("User {} - GitHub API error: {} - {}", owner, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new GithubRequestException(e.getResponseBodyAsString(), e.getStatusCode().value());
+        } catch (Exception e) {
+            log.error("User {} - Unexpected error: {}", owner, e.getMessage(), e);
+            throw new RuntimeException(e.getMessage());
         }
     }
 

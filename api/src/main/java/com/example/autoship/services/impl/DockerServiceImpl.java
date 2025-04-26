@@ -3,12 +3,10 @@ package com.example.autoship.services.impl;
 import com.example.autoship.dtos.BuildResult;
 import com.example.autoship.dtos.ScriptResult;
 import com.example.autoship.exceptions.BuildFailedException;
-import com.example.autoship.models.Artifact;
-import com.example.autoship.models.Build;
-import com.example.autoship.models.Deployment;
-import com.example.autoship.models.StatusType;
+import com.example.autoship.models.*;
 import com.example.autoship.repositories.ArtifactRepository;
 import com.example.autoship.repositories.BuildRepository;
+import com.example.autoship.repositories.DockerCredRepository;
 import com.example.autoship.repositories.ProjectRepository;
 import com.example.autoship.services.DockerService;
 import lombok.AllArgsConstructor;
@@ -33,6 +31,7 @@ import java.util.regex.Pattern;
 public class DockerServiceImpl implements DockerService {
 
     private final ProjectRepository projectRepository;
+    private final DockerCredRepository dockerCredRepository;
     private final BuildRepository buildRepository;
     private final ArtifactRepository artifactRepository;
     private static final String DOCKER_BUILD_PUSH_SCRIPT = "../scripts/build_push_docker_images.sh";
@@ -82,6 +81,25 @@ public class DockerServiceImpl implements DockerService {
 
         log.info("[BUILD][RepoID:{}] 🏁 Build process completed for branch: '{}'. Result: {}", repoID, branch, build.getStatus());
         return new BuildResult(scriptResult.getSuccess(), scriptResult.getArtifacts());
+    }
+
+    @Override
+    public DockerCredentials addDockerCred(Long userId, String username, String password) {
+        log.debug("User: {} - Saving Docker credentials", userId);
+
+        DockerCredentials credentialsExist = dockerCredRepository.findByUsername(username);
+        if (credentialsExist == null) {
+            DockerCredentials dockerCredentials = new DockerCredentials(
+                    userId,
+                    username,
+                    password
+            );
+
+            log.info("User: {} - Docker credentials saved successfully", userId);
+            return dockerCredRepository.save(dockerCredentials);
+        }
+
+        return credentialsExist;
     }
 
     private ScriptResult runDockerScript(String proj_dir, String tag, Long buildNB, String username, String passwd) throws BuildFailedException {
