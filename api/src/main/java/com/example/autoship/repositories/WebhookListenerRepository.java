@@ -9,4 +9,6 @@ import java.util.List;
 public interface WebhookListenerRepository extends JpaRepository<WebhookListener,Long> {
 
     WebhookListener findOneByProject_RepoIDAndBranch(Long repoID, String branch);
+
+
 }
