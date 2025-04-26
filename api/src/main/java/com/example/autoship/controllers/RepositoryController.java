@@ -1,13 +1,10 @@
 package com.example.autoship.controllers;
 
-import com.example.autoship.dtos.DeploymentConfigDTO;
 import com.example.autoship.exceptions.GithubRequestException;
 import com.example.autoship.services.GitService;
-import com.example.autoship.services.ProjectService;
 import com.example.autoship.utils.ResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
